@@ -1,0 +1,128 @@
+---
+title: "Algebra Lineal"
+author: "Heiner Romero Leiva"
+date: "9/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Algebra Lineal
+
+```{r}
+# Definiendo una matriz
+
+a = matrix(1:12, nrow = 4)
+a
+t(a) # para hacer la transpuesta cambio las filas a columnas y vice versa
+
+# Multiplicacion
+
+a%*%t(a) # hay que hacerlo asi, porque si se hace como a*a sin transpuesta hace el calculo tensorial 
+### Explicacion:
+#### A pie la multiplicacion es: primera fila por primera columna:
+    #* 1x1 + 5*5 + 9*9 
+    #* 1+25+81
+    #* 107
+
+```
+```{r}
+# Ejemplo 1:
+vec = c(2,1,0,0,2,1,2,3,3)
+a = matrix(vec, ncol = 3)
+a
+
+vec2 = c(3,1,1,2,0,1,1,0,1)
+b = matrix(vec2, ncol=3)
+b
+
+## Producto de matrices 
+
+a%*%(b)
+
+install.packages("Biodem")
+library(Biodem)
+
+mtx.exp(a,2) # para elevar la matriz al cuadrado
+
+#install.packages("expm")
+#library(expm) # otra forma de elevar las matrices al cuadrado 
+#a%%2
+
+mtx.exp(a,3)
+
+```
+
+### Rango de una matriz cuadrada
+
+```{r}
+qr(a) # rango de filas o columnas linealmente independientes
+qr(a)$rank # es de rango 3
+
+nueva = rbind(c(1,4,2), c(0,1,3), c(1,8,9))
+nueva
+
+qr(nueva)$rank # es de rango 3
+
+solve(nueva)
+
+solve(nueva)%*%nueva # matriz identidad
+
+round(solve(nueva)%*%nueva, 2) # matriz identidad perfecta
+
+solve(nueva, c(1,2,3)) # para sistemas de ecuaciones lineales 
+
+eigen(nueva) # devuelve valores y vectores propios
+
+eigen(nueva)$values
+eigen(nueva)$vectors # para sacar solo una u otra
+
+```
+```{r}
+# Ejemplo:
+
+acceso = rbind(c(2,6,-8), c(0,6,-3), c(0,2,1))
+acceso
+
+eigen(acceso)$values
+
+# Comprobando la descomposicion canonica
+# $$M = P*D*P-1$$
+
+vec = eigen(acceso)$vectors
+vec
+
+diagonal = diag(eigen(acceso)$values)
+diagonal
+
+
+invertida = t(eigen(acceso)$vectors)
+invertida
+
+formula = vec%*%diagonal%*%invertida
+round(formula)
+
+
+```
+```{r}
+# Matrices con numeros irracionales
+
+opa = matrix(c(3-2i, 5+3i, 1+2i, 2-1i), nrow=2, byrow=T)
+opa
+
+opa%*%opa
+
+eigen(opa)
+
+eigen(opa)$vectors
+eigen(opa)$values
+
+
+```
+
+
+
+
+

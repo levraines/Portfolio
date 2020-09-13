@@ -1,0 +1,115 @@
+---
+title: "Los Valores NA en R"
+author: "Heiner Romero Leiva"
+date: "9/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Los Valores NA en R
+
+```{r}
+2^pi > pi^2
+2^pi
+pi^2
+12345678%%9==0
+12345678/9
+```
+## Condiciones con lenght
+
+```{r}
+length(1:1000)>4
+length(1:100) >400
+```
+
+## Condicionales
+
+```{r}
+x = 1:10
+x[3]
+x[3] = 32
+x
+x[11] = 15
+x
+
+x[2:5] = x[2:5] +3
+x
+x[(length(x)-2):length(x)] = 0 # eb este caso recordar que inicia de derecha a izquierda y de 0
+x
+x[length(x) + 5] = 9 # valores desconocidos porque no sabe donde ponerlo, asi que lo rellena
+x
+
+```
+
+
+## NA (Not Available)
+
+```{r}
+cumsum(x) # no hace los ultimos porque los NA no los "lee"
+mean(x)
+
+sum(x, na.rm = TRUE) # ahora si deja porque estoy removiendo el na
+mean(x, na.rm = TRUE)
+min(x, na.rm = TRUE) # con el concatenador si me va a dejar hacer operaciones quitandole los NA
+
+which(x==NA) # no nos va a decir que hayan NA, recordemos que los NA son un concepto, no un valor
+
+is.na(x) # me trae los indices que contienen valores NAs y me retorna un vector booleano
+
+which(is.na(x)) # me retorna las posiciones donde estan
+x[which(is.na(x))]
+```
+## Tratamiento de los NAs
+Lo que se suele hacer con los NAs generalmente en estadistica es sustituirlos por la media, entonces cuando hayan valores en Nas, se van a sustituir (al menos en este curso por la media)
+
+Entonces: 
+
+```{r}
+x # vector con NA
+y = x
+y
+
+y[is.na(y)]
+
+y[is.na(y)] = mean(y, na.rm=TRUE) # Esta funcion es para la sustitucion de valores NAs
+y
+
+```
+
+## Consultando valores cuando no son NA
+
+```{r}
+x[!is.na(x)] # me retorna los numeros que no son NA
+# cumsum(x, na.rm = TRUE) # esta no admite el parametro de NA
+cumsum(x[!is.na(x)]) # con esta si se puede trabajar con los NAs
+```
+
+## Borrando los NAs -- No es lo mejor 
+
+```{r}
+na.omit(x)
+```
+## Otras formas de trabajar con los NAs
+
+```{r}
+sum(na.omit(x)) # este las omite y las suma
+cumsum(na.omit(x)) # este lo hace pero me borra los NAs
+
+
+```
+
+```{r}
+x_clean = na.omit(x)
+x_clean
+```
+## Eliminando con el ATTR el tema de las na.omit
+
+```{r}
+attr(x_clean, "na.action") = NULL # elimina lo de 12, 13, 14 y 15 con el attr (para quitar)
+x_clean
+```
+
+

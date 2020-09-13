@@ -1,0 +1,78 @@
+---
+title: "Tarea Estructuras de datos"
+author: "Heiner Romero Leiva"
+date: "9/9/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ejercicios
+
+```{r}
+# Crea un vector llamado "Harry" formado por la sucesión de números consecutivos entre el -10 y 27. Pedile a R que devuelva el elemento de índice 7. Escriba el resultado.
+
+Harry = -10:27
+Harry
+
+Harry[7]
+
+```
+```{r}
+# De el máximo de la sucesión (100*2^n -7*3^n) con n=0,...,200
+n = 0:200
+max(100*2^n -7*3^n)
+
+```
+```{r}
+# Cree la sucesión de números consecutivos entre 0 y 40. A continuación, cree el vector (3*5^n - 1) con n=0,...,40. Nombrelo como nombre x. Ahora, dele el subvector de los elementos que son estrictamente mayores que 3.5
+
+n = 0:40
+x = (3*5^n - 1)
+which(x>3.5)
+
+```
+```{r}
+# Cree una función que le devuelva la parte real, la imaginaria, el módulo, el argumento y el conjugado de un número, mostrando solo 2 cifras significativas RECOMENDACIÓN: En algún momento les hará falta utilizar vectores
+
+funcion = function(x){print(c(Re(x), Im(x), Mod(x), Arg(x), Conj(x)),2)}
+funcion
+funcion(x)
+
+```
+```{r}
+# Cree una función que resuelva ecuaciones de segundo grado (de la forma Ax^2+Bx+C=0). No importa, por ahora, que tenga en cuenta las que no tienen solución RECOMENDACIÓN: En algún momento le hará falta utilizar vectores
+
+ecuacion = function(a,b,c){c((-b+sqrt(b^2-4*a*c)/(2*a)),(-b-sqrt(b^2-4*a*c)/(2*a)))}
+ecuacion(2,5,7)
+
+```
+
+```{r}
+# Tomando el vector vec = c(0,9,98,2,6,7,5,19,88,20,16,0), de 3 opciones diferentes para calcular el subvector c(9,19,20,16)
+
+# Tomando el vector vec definido en el apartado anterior, buscad - qué entradas son pares - qué entradas no son pares y mayores que 20 - dónde toma vec su valor máximo - dónde toma vec sus valores mínimos
+
+#c(0,9,98,2,6,7,5,19,88,20,16,0)
+#vec[c(2,8,10,11)]
+#vec[vec == 9 | vec == 19 | vec == 20 | vec == 16]
+#vec[vec >= 9 & vec <= 20]
+
+#Pares
+
+# Pares: which(vec%%2==0)
+
+# No pares y mayores que 20: which(vec%%2!=0 & vec>20)
+
+# Máximo: which.max(vec)
+
+# Mínimos: which(vec==min(vec))
+
+
+
+```
+
