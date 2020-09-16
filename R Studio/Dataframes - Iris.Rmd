@@ -1,0 +1,175 @@
+---
+title: "DataFrames Practica"
+author: "Heiner Romero Leiva"
+date: "07/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### Dataframes 
+```{r}
+data() # para ver todos los dataframes que hay en R precargados 
+data(package = .packages(all.available = TRUE)) # para ver todos los dataframes de todas las bibliotecas de R. 
+
+```
+
+### Cargando dataset de Iris 
+
+```{r}
+
+# Exploracion inicial
+df = iris
+
+head(iris, 3)
+tail(iris, 2)
+
+summary(iris)
+
+names(df)
+
+str(df) # Tiene las primeras columnas 4 que son vectores y la quinta es un factor con tres niveles. 
+
+rownames(df) # identificadores de cada fila 
+
+dimnames(df) # para ver todos, tanto filas como columnas. 
+
+dim(df) # cantidad de columnas y filas # variantes: ncol y nrow
+
+df$Sepal.Length[1:10] # seleccionar columnas y haciendo slicing se acceden a los primeros 10 
+
+df$Species[1:10] # en las columnas que son factores se pueden ver los niveles
+
+```
+
+### Estructura y filtrado de dataframes
+
+```{r}
+df[1:10,] # filas de la 1 a la 10 y todas las columnas
+
+df[1:10, 2:4] # las primeras 10 filas y solo columnas 2, 3 y 4
+
+df[df$Species == "setosa" & df$Sepal.Width > 4, ] # se pueden hacer filtros mediante consola
+
+df[df$Species == "setosa" & df$Sepal.Width > 4, ][c(1,3), c(2,5)] # fila 1 y 3 de la columna 2 y 5. Recordar que primera se llaman a las filas y segundo a las columnas
+
+df[df$Species == "setosa" & df$Sepal.Width > 4, ][c(1:2), c(3:5)] # mismo principio
+
+new = Orange
+head(new)
+
+new[c(10:12), ]
+new[c(2,17), c(1:3)] # mismo principio de filtrado
+
+new[2,3] # obtencion de posiciones
+new[new$circumference<= 50, ] # haciendo slicing avanzado con filtros, menor o igual a 50
+
+```
+
+### Carga de ficheros externos
+
+```{r}
+# df = read.table("/Users/heinerleivagmail.com/bulls.dat", header = FALSE, col.names = c("breed", "sale_price", "shoulder", "fat_free", "shoulder_price","sale_height"), sep = ",", dec = "." )
+```
+### Carga desde URL 
+
+```{r}
+# df2 = read.table("link de internet" y se pueden usar todos los parametros que ya utilice)
+
+```
+
+### Carga de un archivo CSV
+
+```{r}
+df3 = read.csv("/Users/heinerleivagmail.com/voces.csv")
+df3
+
+head(df3, 6)
+
+str(df3)
+
+# stringsAsFactor = False, los factores los convierte a numeros normales (dentr de la funcion read.table())
+
+help.search("read")
+  
+```
+
+#### Guardar un dataframe 
+
+```{r}
+write.table(df3, file = "/Users/heinerleivagmail.com/nuevo.txt")
+
+df4 = read.table("/Users/heinerleivagmail.com/nuevo.txt", header = TRUE)
+
+head(df4)
+```
+#### Construyendo Data Frames
+
+```{r}
+Genero = c("Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer","Mujer", "Mujer", "Hombre", "Hombre")
+Edad = c(29, 34, 23, 56, 78, 23, 21, 67, 12, 45)
+hermanos = c(0,1,2,3,1,1,2,1,0,0)
+
+personaldata = data.frame(Gen = Genero, Edad = Edad, Her = hermanos)
+str(personaldata)
+
+personaldata[personaldata$Gen == "Hombre",] # dataframe creado de forma correcta
+
+summary(personaldata)
+head(personaldata)
+
+row.names(personaldata) = c("P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10")
+head(personaldata)
+
+# fix(personaldata) para cambiar datos
+
+# Cambiando estructuras del DataFrame
+dimnames(personaldata) = list(
+  c("Marco", "Roy", "Katty", "Narciso", "Anabelle", "Pedro", "Jose", "Moni", "Yari", "Kathe"),
+  c("Sexo", "Annos", "Miembros de Familia")
+)
+
+head(personaldata, 4)
+
+```
+#### Anadir nuevas observaciones
+
+```{r}
+personaldata[11,] = c("Hombre", 30, 1) # no recomendable 
+personaldata = rbind(personaldata, c("Hombre", 30,1))
+print(personaldata)
+
+# Recordar que el cbind es para agregar columnas
+# Rbind es para agregar nuevas filas
+
+personaldata$Sexo = as.character(personaldata$Sexo) # de esta forma puedo cambiar el factor a character -- Casting, cambiando tipo de dato 
+personaldata$Ingresos = c(10000, 20000,34600, 3400, 2304, 89083, 9094, 67000, 89440, 87995, 89440, 84996) # agregando nueva columna de ingresos. 
+
+print(personaldata)
+str(personaldata)
+
+```
+#### Casting
+
+```{r}
+# Casting 
+
+personaldata$Sexo = as.factor(personaldata$Sexo) 
+personaldata$Annos = as.numeric(personaldata$Annos)
+personaldata$`Miembros de Familia` = as.integer(personaldata$`Miembros de Familia`)
+str(personaldata)
+
+Genero = c("Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer","Mujer", "Mujer", "Hombre", "Hombre")
+Edad = c(29, 34, 23, 56, 78, 23, 21, 67, 12, 45)
+hermanos = c(0,1,2,3,1,1,2,1,0,0)
+
+df5 = data.frame(Gen = Genero, Edad = Edad, Her = hermanos)
+str(personaldata)
+
+df5[df5$Gen == "Mujer", ] -> df_m
+str(df_m)
+df_m = droplevels(df_m)
+str(df_m) # borrando los niveles a nivel de dataframe, en este caso hombres. 
+
+```
