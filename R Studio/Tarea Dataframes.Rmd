@@ -1,0 +1,78 @@
+---
+title: "Tarea DataFrames"
+author: "Heiner Romero Leiva"
+date: "01/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#### Tarea 
+
+¿Cuantos deportistas aparecen en el data frame? 
+
+```{r}
+
+library(dplyr)
+
+data = read.csv("/Users/heinerleivagmail.com/Medals1.csv")
+dim(data) 
+
+# Respuesta: aparecen 2311 deportistas en el Data Frame. 
+
+```
+
+¿Cuantos han ganado medallas de oro, cuantos de plata y cuantos de bronce?
+```{r}
+
+count(data[data$Medal == "Gold",]) 
+count(data[data$Medal == "Silver",]) 
+count(data[data$Medal == "Bronze",]) 
+
+# o 
+
+count(group_by(data, Medal))
+
+# Respuesta: 774 han ganado medallas de oro, 773 gan ganado medallas de plata y 764 han ganado medallas de bronce. 
+
+```
+¿En cuantos lugares se han hecho olimpiadas de invierno?
+```{r}
+str(data$City)
+
+# Se han hecho olimpiadas en 17 lugares diferentes
+
+```
+¿Cuantos hombres y cuantas mujeres hay?
+```{r}
+
+
+count(group_by(data, Event.gender))
+
+# Respuesta: Hay 1386 hombres y 802 mujeres, no se registro el sexo para 123 personas. 
+```
+¿En qué año participaron más deportistas?
+```{r}
+
+
+count(group_by(data, Year))
+
+# o 
+
+head(count(group_by(data, Year), sort = T), 1)
+
+# Respuesta en 2006. 
+```
+El campo NOC indica el país del ganador de la medalla. ¿Qué país puede presumir de haber ganado más medallas de oro en los juegos de invierno entre 1960 y 1996?
+```{r}
+
+head(count(group_by(
+  data[data$Year >= 1960 & data$Year <= 1996 & data$Medal == "Gold", ], NOC), 
+           sort = T), 1)
+
+# Respuesta: El ganador de mas medallas fue la URS con 71 de ellas. 
+```
+
