@@ -1,0 +1,37 @@
+---
+title: "DataFrames de variables cualitativas"
+author: "Heiner Romero Leiva"
+date: "4/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Ejemplo completo
+
+```{r}
+beb_energy = read.table("/Users/heinerleivagmail.com/Documents/GitHub/r-basic/data/EnergyDrink", header = TRUE)
+
+str(beb_energy)
+
+head(beb_energy, 4)
+
+summary(beb_energy) # tabla de frecuencias absolutas, siempre y cuando sean de tipo factor. 
+
+apply(beb_energy, MARGIN = 2, FUN = table) # frecuencias relativas globales
+
+
+apply(beb_energy, MARGIN = 2, FUN = table)$sexo # para sacar cada una de las columnas
+
+table(beb_energy$sexo) # lo mismo que el de arriba. 
+
+table(beb_energy) # divido por sexo
+
+table(beb_energy[c(1,3)]) # tabla de doble entrada, con el estudio en las filas y el sexo en las columnas
+
+ftable(beb_energy) # tabla plana
+
+```
+
