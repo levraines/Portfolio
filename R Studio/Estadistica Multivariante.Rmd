@@ -1,0 +1,40 @@
+---
+title: "Estadistica Multivariante HairEyeColor"
+author: "Heiner Romero Leiva"
+date: "05/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Ejemplo de color de ojos y de pelo
+```{r}
+HairEyeColor
+
+sum(HairEyeColor) -> total
+
+
+```
+
+El total de individuos de la tabla de datos es `r total`.
+
+```{r}
+prop.table(HairEyeColor, margin = 3)
+
+prop.table(HairEyeColor, margin = c(1,2))
+```
+
+```{r}
+aperm(HairEyeColor, perm = c("Sex", "Hair", "Eye")) # de esta forma es mas facil visualizar y entender los datos. 
+
+```
+```{r}
+library(kableExtra)
+
+kable(HairEyeColor) # para visualizar mejor las frecuencias (solo para dataframes pequenos). 
+
+
+```
+

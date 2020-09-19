@@ -1,0 +1,159 @@
+---
+title: "Analisis de datos cualitativos"
+author: "Heiner Romero Leiva"
+date: "9/04/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Tablas de contingencia absoluta
+
+```{r}
+datos = factor(c("H", "M", "M", "M", "H", "H", "M"))
+table(datos) # con esta funcion se puede ver la tabla de distribucion de frecuencias relativa
+table(datos)["M"] # accediendo a factores especificos
+sum(table(datos)) # cantidad de observaciones de la tabla, recordar que son cualitativas
+```
+### Ejercicio:
+
+```{r}
+data = rep("H", times = 6) # creando 6 observaciones de hombres
+data2 = rep("M", times = 14) # creando 6 observaciones de mujeres
+nuevo = c(data, data2) # juntando ambos vectores
+print(nuevo) # imprimiendo vector
+
+table(nuevo) # frecuencias absolutas
+prop.table(table(nuevo)) # frecuencias relativas
+table(nuevo) / length(nuevo) # a mano las frecuencias relativas
+
+names(which(table(nuevo) == max(table(nuevo)))) # obteniendo moda
+
+```
+
+### Frecuencias relativas
+
+$$f_i = \frac{n_i}{n}$$
+
+```{r}
+prop.table(table(datos)) # obteniendo frecuencia relativa
+100*prop.table(table(datos)) # multiplicado por 100
+table(datos) / length(datos) # calculando a mano
+names(table(datos)) # acceder a los nombres de las etiquetas
+names(which(table(datos)==3)) # deme los nombres de las observaciones que aparecen 3 veces
+names(which(table(datos) == max(table(datos)))) # Moda
+
+moda = function(d){
+  names(which(table(d)==max(table(d))))
+}
+
+m_t = moda(datos)
+```
+
+La moda del Data Frame es: `r m_t`.
+
+### Tablas de frecuencias Bidimensionales:
+
+```{r}
+columna = rep("H", 9) # definiendo vectores
+columna2 = rep("F", 11)
+respuesta = rep("Si", 7)
+respuesta2 = rep("No", 13)
+
+sexo = c(columna, columna2) # juntando vectores 
+respuestas = c(respuesta, respuesta2) # juntando vectores
+
+# Frecuencias relativas globales
+
+prop.table(table(sexo, respuestas)) 
+
+# Interpretacion: del total de los individuos, un 55% de las mujeres respondieron que no, un 0% respondio que si, un 10% de los hombres respondio que no y un 35% respondio que si. 
+
+# Frecuencia relativas marginales:
+
+prop.table(table(sexo, respuestas), margin = 1) # por sexo (filas)
+
+# Interpretacion: un 100% de las mujeres dijeron que no y un 0% dijeron que si. 
+# Un 22.22% de los hombres dijeron que no, y un 77.77% dijeron que si. 
+
+prop.table(table(sexo, respuestas), margin = 2) # por respuestas (columnas)
+
+# Interpretacion: del total de individuos que dijeron que no, un 84.61% corresponde a mujeres y el 15.38% corresponde a hombres, asimismo, del total de individuos que respondieron que si, un 100% de los hombres dijeron que si y ninguna mujer respondio que si. 
+
+```
+
+### Paquete `Gmodels`
+
+```{r}
+library(gmodels)
+
+sex = factor(c(sexo)) # creando factores
+ans = factor(c(respuestas)) # creando factores
+str(sex)
+str(ans)
+
+CrossTable(sex, ans, prop.chisq = FALSE)
+
+
+```
+
+### Tablas de frecuencias bidimensionales - Operaciones
+
+```{r}
+table(sex, ans)
+
+colSums(table(sex, ans)) # sumando por columnas
+
+rowSums(table(sex, ans)) # sumando por filas
+
+colSums(prop.table(table(sex, ans))) # obteniendo las relativas
+
+rowSums(prop.table(table(sex, ans)))  # obteniendo las relativas
+
+apply(table(sex, ans), FUN = sum, MARGIN = 1) # es lo mismo que con rowSums. 
+
+apply(table(sex, ans), FUN = sqrt, MARGIN = c(1,2)) # para aplicar a cada elemento de la matriz obtenida evitando ciclo for. 
+
+```
+### Tablas de frecuencias Multidimensionales
+
+### Ejemplo con tres dimensiones
+
+```{r}
+
+answer = sample(c("Si", "No"), size = 100, replace = TRUE)
+sex = sample(c("H", "F"), size = 100, replace = TRUE)
+place = sample(c("Barcelona", "CDMX", "Antigua", "Zurich", "Rome"), size = 100, replace = TRUE)
+
+table(sex, answer, place) # crea vista tridimensional
+
+ftable(sex, answer, place) # tabla en formato plano
+ftable(sex, answer, place, col.vars = c("sex", "answer")) # cambiando distribucion de los datos
+```
+### Filtrar las tablas
+
+```{r}
+table(sex, answer, place)["F", "Si", "Barcelona"] # cuantas mujeres respondieron que si y viven en Barcelona?
+
+table(sex, answer, place)[, "Si", "CDMX"] # dejo abierto el sexo, y entonces obtengo ambos sexos la cantidad de respuestas
+
+table(sex, answer, place)[, "No", ] #dejo abierto el sexo y el lugar, solo veo el no. 
+
+table(sex, answer, place)["F", , "Zurich"] # dejo abierta la respuesta y solo busco por genero femenino y lugar
+
+```
+### Frecuencias relativas en tablas multidimensionales
+
+```{r}
+prop.table(table(sex, answer, place)) # Frecuencias relativas globales
+
+prop.table(table(sex, answer, place), margin = 3) # frecuencia relativa marginal por lugar
+
+prop.table(table(sex, answer, place), margin = c(1,3)) # frecuencia relativa marginal por sexo y pais
+
+ftable(prop.table(table(sex, answer, place))) # formato plano y mas compacto. 
+
+```
+
