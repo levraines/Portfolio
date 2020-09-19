@@ -1,0 +1,42 @@
+---
+title: "Graficos de Mosaico"
+author: "Heiner Romero Leiva"
+date: "9/09/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Graficos de Mosaico
+
+```{r}
+sexo = c("F", "M", "F", "F", "M", "F", "M")
+respuestas = c("Si", "No", "Si", "No", "Si", "Si", "No")
+plot(table(sexo, respuestas), main = "Grafico de mosaico de las variables \"sexo\" y \"Respuestas\"")
+
+# En las mujeres predomina el si, y en el hombre el no. 
+```
+
+### Grafico de Mosaico multidimensional
+
+```{r}
+
+HairEyeColor
+
+plot(HairEyeColor, main = "Grafico de mosaico de la tabla HairEyeColor", col = c("lightblue", "pink"))
+
+# En la practica estos no son tan utilizados con mas de dos dimensiones, porque tienden a confundir al usuario final. 
+
+# Para evitar confundir al usuario, podemos usar el paquete VCD junto con VCD Extra, de la siguiente forma:
+
+library(vcd)
+library(vcdExtra)
+
+vcd::cotabplot(HairEyeColor) # con este grafico se ve mas ordenado, pero de igual forma solo recomieno usarlo para variables bidimensionales.
+
+# library(rgl) # para graficacion en 3D
+# vcdExtra::mosaic3d(HairEyeColor, type = "expected", box = TRUE, col = c("lightblue", "pink"))
+```
+
