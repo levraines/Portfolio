@@ -1,0 +1,38 @@
+---
+title: "Grafico de Pastel"
+author: "Heiner Romero Leiva"
+date: "9/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Grafico de pastel con variables cualitativas expresadas en numeros
+
+```{r}
+data = sample(1:7, size = 7, replace = TRUE)
+data
+
+pie(table(data), main = "Diagrama circular de la variable datos")
+
+```
+
+### Grafico de pastel para datos cualitativos binarios
+```{r}
+
+respuestas = c("Si", "No", "Si", "No", "Si", "Si")
+pie(table(respuestas), main = "Diagrama circular de la variable respuesta")
+
+```
+
+### Grafico de pastel con datos cualitativos 
+
+```{r}
+paises = c("Espana", "Belice", "Colombia", "Espana")
+pie(table(paises), main = "Diagrama circular de la variable respuesta")
+```
+
+#### Tener cuidado con los graficos de pastel, ya que los datos a veces no son tan faciles de leer y no se ven las relaciones que hay porque se pierden cuando no son tan evidentes. 
+
