@@ -1,0 +1,60 @@
+---
+title: "Diagrama de barras"
+author: "Heiner Romero Leiva"
+date: "9/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Diagramas de barras
+
+```{r}
+sexo = c("H", "F", "H", "H", "H", "F", "H", "H", "H", "F", "F", "F", "H", "F", "F", "H", "F", "F", "F", "F")
+
+respuestas = c("Si", "Si", "Si", "Si", "Si", "Si", "Si", "No", "No", "No", "No", "No", "No", "No", "No", "No", "No", "Si", "No", "No")
+
+barplot(table(sexo), col = c("lightblue", "pink"), main = "Diagrama de barras de las frecuencias absolutas \n de la variable \"Sexo\"")
+
+barplot(prop.table(table(sexo)), col = c("lightblue", "pink"), main = "Diagrama de barras de las frecuencias relativas \n de la variable \"Sexo\"")
+
+```
+
+### Usando barras en el mismo cuadrante
+
+
+
+```{r}
+par(mfrow=c(1,2))
+barplot(table(sexo), col = c("green", "yellow"))
+barplot(table(sexo), col = c("red", "blue"))
+```
+
+### Barras de forma horizontal
+
+
+
+```{r}
+barplot(table(sexo), horiz = TRUE, col = c("yellow", "pink"))
+```
+
+### Barplots en tablas bidimensionales en diagrama de barras apiladas
+
+```{r}
+barplot(table(sexo, respuestas), legend.text = TRUE, col = c("blue", "green"))
+```
+
+### Barras por bloques
+
+```{r}
+barplot(table(respuestas, sexo), beside = TRUE, legend.text = TRUE, col = c("red", "purple"))
+```
+ 
+### Diagrama de barra por bloques - Parametros de Leyendas
+ 
+```{r}
+barplot(table(respuestas, sexo), beside = TRUE, names = c("Men", "Women"), col = c("yellow", "lightblue"), legend.text = c("No", "Yes"))
+```
+ 
