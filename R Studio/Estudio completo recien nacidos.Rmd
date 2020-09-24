@@ -1,0 +1,163 @@
+---
+title: "Estudio de bebes recien nacidos"
+author: "Heiner Romero Leiva"
+date: "9/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Estudio de bebes recien nacidos
+
+### Llamando a la tabla de datos a trabajar
+```{r}
+MASS::birthwt -> data
+
+```
+
+### Explorando tabla de datos
+
+```{r}
+
+str(data)
+
+head(data)
+
+# Definicion de columnas
+
+# low indica si el peso del recien nacido es menor a 2.5kg binaria
+# age: edad de la madre, cuantitativa discreta
+# lwt: peso de la madre en libras cuantitativa continua
+# race: raza de la madre, cualitativa nominal. 1 = blanca, 2 = negra, 3 = otro
+# smoke: si la madre fumaba durante el embarazo binaria. 
+# plt: numero previo de labores de parto prematuros, cuantitativa discreta 
+# ht: historia de hipertension: binaria
+# ui: presencia de irritabilidad uterinia binaria
+# ftv: numero de visitas fisicas durante el primer trimestre, cuantitativa discreta
+# bwt: peso del recien nacido en gramos cuantitativa continua
+```
+
+
+### Calcule una tabla de frecuencias relativas marginales de los pares (raza de la madre, peso inferior a 2.5 kg o no) que permita ver si la raza de la madre influye en el peso del bebé.
+```{r}
+
+nuevo = data[c("low", "race")] # obteniendo las columnas
+nuevo$low = as.factor(nuevo$low) # convirtiendo a factores ya que son formato int
+nuevo$race = as.factor(nuevo$race)  # convirtiendo a factores ya que son formato int
+
+levels(nuevo$low) = c("No", "Si") # redefiniendo variable de binaria a etiquetas
+levels(nuevo$race) = c("White", "Black", "Other") # redefiniendo variable a etiquetas
+
+round(prop.table(table(nuevo), margin = 2), 3) # obteniendo los datos de las columnas 
+
+# Segun los datos analizados, la rasa de la madre ni influye en el peso del bebe, no obstante se ve que para el caso de las madres de raza negra si hay un grado de influencia mayor que en el caso de las madres blancas y de otras razas. 
+
+```
+
+### Dibuje un diagrama de mosaico de la tabla del ejercicio anterior.
+```{r}
+
+mosaicplot(round(prop.table(table(nuevo), margin = 2), 3))
+
+```
+
+
+### Dibuje un diagrama bidimensional de barras, con las barras organizadas en bloques, que permita visualizar la información de los ejercicios anteriores. Aproveche para escribirle nombres adecuados a los bloques, colores a las barras, y añadir una leyenda que explique qué representa cada barra.
+
+```{r}
+
+barplot(prop.table(table(nuevo), margin = 2),legend = T, ylim = c(0.0, 0.9), beside = T, col = c("cyan1", "cyan4"), main = "Relacion entre peso de los recien nacidos por raza de la madre")
+
+```
+
+### ¿Se puede obtener alguna conclusión de la tabla y el diagrama de barras anterior? Argumente su respuesta
+
+### Las mujeres blancas tienen menos probabilidad de tener un nino con un peso menor de 2.5 kg, mientras que las mujeres negras son las que tienen la mayor probabilidad de acuerdo a las razas analizadas. 
+
+### Repite los cuatro ejercicios anteriores para los pares (madre fumadora o no, peso inferior a 2.5 kg o no) y para los pares (madre hipertensa o no, peso inferior a 2.5 kg o no.
+
+```{r}
+
+# Madre fumadora 
+nuevo = data[c("low", "smoke")] # obteniendo las columnas
+nuevo$low = as.factor(nuevo$low) # convirtiendo a factores ya que son formato int
+nuevo$smoke = as.factor(nuevo$smoke)  # convirtiendo a factores ya que son formato int
+
+levels(nuevo$low) = c("No", "Si") # redefiniendo variable de binaria a etiquetas
+levels(nuevo$smoke) = c("No", "Si") # redefiniendo variable a etiquetas
+
+round(prop.table(table(nuevo), margin = 2), 3) # obteniendo los datos de las columnas 
+
+mosaicplot(round(prop.table(table(nuevo), margin = 2), 3))
+
+barplot(prop.table(table(nuevo), margin = 2),legend = T,  
+        legend.text = c(">2.5Kg", "<2.5Kg"), 
+        ylim = c(0.0, 0.9), beside = T, col = c("red", "gold"), 
+        main = "Relacion entre los habitos de fumado de la madre \n con el peso del recien nacido")
+
+# Analisis: 
+
+# En realidad no hay una relacion directa entre los habitos de fumado de la madre y el peso del recien nacido, se ve que si la madre no fuma el nino tendra menos probabilidad de nacer pesando menos de 2.5 kg, no obstante cuando la madre fuma hay cierta posibilidad de que el nino nazca pesando menos de 2.5 kg que si no lo hiciese pero no es tan significativa. 
+
+
+
+
+# Madre hipertensa
+
+
+nuevo = data[c("low", "ht")] # obteniendo las columnas
+nuevo$low = as.factor(nuevo$low) # convirtiendo a factores ya que son formato int
+nuevo$ht = as.factor(nuevo$ht)  # convirtiendo a factores ya que son formato int
+
+levels(nuevo$low) = c("No", "Si") # redefiniendo variable de binaria a etiquetas
+levels(nuevo$ht) = c("No", "Si") # redefiniendo variable a etiquetas
+
+round(prop.table(table(nuevo), margin = 2), 3) # obteniendo los datos de las columnas 
+
+barplot(prop.table(table(nuevo), margin = 2),legend = T, 
+         legend.text = c(">2.5Kg", "<2.5Kg"), 
+        ylim = c(0.0, 0.9), beside = T, 
+        col = c("red", "gold"), 
+        main = "Relacion entre diagnostico de madre hipertensa o no \n con respecto al peso del recien nacido")
+
+# Analisis:
+
+# Se puede observar que si la madre no es hipertensa hay mas probabilidades de que el nino no nazca pesando menos de 2.5 kg. 
+```
+
+
+### Calcule una tabla de frecuencias relativas marginales de las ternas (raza de la madre, madre fumadora o no, peso inferior a 2.5 kg o no) que permita ver si la raza de la madre y su condición de fumadora o no fumadora influyen en el peso del bebé.
+
+
+```{r}
+
+# Analizando datos de la segunda forma ensenada
+
+library(dplyr)
+
+birthwt = MASS::birthwt
+
+tab1 = table(select(birthwt,race,smoke,low))
+tabRacSmoLow = prop.table(tab1,margin=3)
+dimnames(tabRacSmoLow) = list(
+
+  race = c("Blanca","Negra","Otras"),
+  smoke = c("No","Si"),
+  low = c("<2.5 kg",">2.5 kg")
+)
+
+tabRacSmoLow
+```
+
+### Dibuje un diagrama de mosaico de la tabla del ejercicio anterior.
+
+
+```{r}
+plot(tabRacSmoLow,main="Relacion de peso bajo o alto del recien nacido \n según raza y habitos de fumado de la madre",col=c("pink","lightblue"))
+```
+
+
+
+

@@ -1,0 +1,69 @@
+---
+title: "Repaso de Estadistica descriptiva"
+author: "Heiner Romero Leiva"
+date: "9/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Repaso de Estadistica
+
+### De la instrucción que defina la tabla de frecuencias absolutas de un vector llamado "alumnos"
+
+```{r}
+
+alumnos = sample(1:30, size = 500, replace = TRUE, prob = NULL)
+alumnos
+
+table(alumnos) # lo convierto a tabla
+
+```
+
+### Con una sola instrucción, defina la tabla de frecuencias relativas de un vector llamado "edades"
+
+```{r}
+
+edades = sample(1:80, size = 500, replace = TRUE, prob = NULL)
+
+
+prop.table(table(edades)) #También es correcto table(edades)/length(edades)
+```
+
+### Con una sola instrucción, defina la tabla bidimensional conjunta de frecuencias absolutas de dos vectores llamados "altura" y "peso", de forma que las filas correspondan a "altura" y las columnas a "peso"
+
+```{r}
+altura = sample(1:200, size = 500, replace = TRUE, prob = NULL)
+peso = sample(2:100, size = 500, replace = TRUE, prob = NULL)
+
+table(altura, peso)
+```
+
+### Con una sola instrucción, defina la tabla bidimensional conjunta de frecuencias relativas calculadas dentro del total, de dos vectores llamados "edad" y "altura", de forma que las filas correspondan a "altura" y las columnas a "edad"
+
+```{r}
+prop.table(table(altura, edades))
+```
+
+
+### Con una sola instrucción, dibuje un diagrama de barras básico de un vector llamado "edad"
+
+```{r}
+barplot(table(edades))
+```
+
+### Con una sola instrucción, dibuje un diagrama circular básico de un vector llamado "alumnos"
+
+```{r}
+pie(table(alumnos))
+```
+
+
+### La tabla "DNase" es uno de los data frames que tiene predefinidos R. De la instrucción que dibuje un diagrama de barras básico de la variable "density" de este mismo data frame
+
+```{r}
+barplot(table(DNase$density))
+```
+
