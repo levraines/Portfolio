@@ -1,0 +1,116 @@
+---
+title: "Practica Notas"
+author: "Heiner Romero Leiva"
+date: "6/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Cargue el conjunto de datos de la carpeta data llamado grades.txt en R y responda a las siguientes preguntas:
+
+```{r}
+
+data = read.table("/Users/heinerleivagmail.com/Documents/GitHub/r-basic/data/grades.txt", header = TRUE)
+
+head(data)
+str(data)
+
+```
+
+
+Calcule la media, la mediana y la moda redondeada a dos cifras decimales de las notas numéricas de los exámenes tanto de forma conjunta como por estudio universitario. ¿En qué grupo observamos la nota más alta? ¿Qué grupo está por encima de la media de estudiantes?
+
+```{r}
+# Calculo de medidas de posicion por notas conjuntas
+
+# Media
+round(mean(data[,2]),2)
+
+# Mediana
+round(median(data[,2]),2)
+      
+# Moda
+round(as.numeric(names(which(table(data$nota) == max(table(data$nota))))),2)
+# mfv(data$nota,na_rm = TRUE)
+
+# Calculo de medidas de posicion en forma conjunta. 
+
+# Media
+round(by(data[,c(2)], data$estudio, FUN = mean),2)
+
+# Mediana
+round(by(data[,c(2)], data$estudio, FUN = median),2)
+
+library(modeest)
+
+#Moda
+by(round(data$nota,2),data$estudio,FUN=mfv,na_rm=TRUE)
+
+round(by(data[,c(2)], data$estudio, FUN = max),2)
+# Las notas mas altas se observan en Industrial.
+
+# Sin embargo, el grupo que esta por encima de la media de los estudiantes es el grupo de matematicas. 
+```
+
+¿En qué grupo observamos más variación de notas? Justifique su respuesta:
+
+```{r}
+
+round(by(data[,c(2)], data$estudio, FUN = sd),2)
+# En matematica la variacion de las notas es mayor. 
+```
+
+¿Hay mucha diferencia entre el grupo que ha respondido en el ejercicio 1 y en el ejercicio 2? Intente dar una explicación objetiva del suceso. 
+
+```{r}
+by(data$nota, data$estudio, FUN = summary)
+
+# No hay diferencia, ya que matematica presenta las notas en promedio mas altas y es el que tiene  mayor variacion, sin embargo, Industrial presenta mayor recorrido y se debe a que hay un outlier lo cual hace mas grande este recorrido de distancia. 
+```
+
+Dibuje en un único gráfico los cuatro diagramas de caja, uno para cada grupo. Añade así mismo la nota media, pongale nombre, título y color al gráfico para documentar el gráfico correctamente.
+
+```{r}
+
+boxplot(nota~estudio, data = data, ylab = "Notas por estudio", notch = TRUE, col = c("cyan", "gold", "lightblue", "gold"), main = "Boxplot de notas por estudio")
+medias = aggregate(nota~estudio, data = data, FUN = mean)
+points(medias, col = "red", pch = 15)
+
+```
+
+
+¿Observa algunos valores atípicos en el boxplot anterior? ¿A qué grupo pertence?
+
+Si, hay valores atipicos por estudio ccomo por ejemplo:
+
+* Hay un atipico en industrial (que es el mayor de todos), luego hay otro en informatica y finalmente otro mas en telematica. Todos los outliers detectados superan las notas de 8. 
+
+
+Indique a partir del boxplot anterior en qué grupo observamos más variedad de notas.
+
+En el grupo en que se observa mas variedad es en matematicas, ya que se ve como el boxplot es mas ancho y cuenta con mayor recorrido (sin tomar en cuenta los outliers de los otros grupos).
+
+
+Con base a todo lo anterior, ¿puede afirmar de forma estadística que el examen de carrera ha ido mejor en algún estudio que en los demás?
+
+De forma estadistica se puede afirmar que en informatica es en el grupo que se han obtenido notas superiores a 2 de entrada, ya que en los demas se han obtenido notas de 0 o menores a 2, sin embargo en informatica las notas mas altas no llegan a 8, salvo una representada por un outlier, mientras que en matematica, se han obtenido las mejores notas en promedio y es donde se registran las notas mas altas (sin tomar en cuenta los outliers de los demas grupos). Ahora bien, en matematica es donde hay mayor variabilidad de las notas, y su primer cuartil es muy parecido al de Industrial y Telematica, el segundo cuartil es mayor que el de los demas y su tercer cuartil igual. En informatica no hay mucha variacion en las notas, lo que indica que si bien es cierto fue en donde se obtuve las mejores notas de entrada, su segundo y tercer cuartil evidencia que las notas se tendieron a colocar entre 3 y 4.5, entonces no fueron el mejor grupo, sino lo fue matematicas. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
