@@ -1,0 +1,134 @@
+---
+title: "Regresion Lineal"
+author: "Heiner Romero Leiva"
+date: "10/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Calculando rectas de regresion:
+
+```{r}
+body = read.table("/Users/heinerleivagmail.com/Documents/GitHub/r-basic/data/bodyfat.txt", header = TRUE)
+
+head(body,3)
+
+
+```
+
+Mas concretamente, solo se utilizara las variables **fat** y **weight**
+
+```{r}
+body2 = body[,c(2,4)]
+names(body2) = c("Grasa", "Peso")
+str(body2)
+
+head(body2, 3)
+```
+
+Primero se va a hacer un grafico para ver el comportamiento de los datos:
+
+```{r}
+plot(body2)
+```
+
+Calculando la recta de regresion:
+
+```{r}
+
+lm(body2$Peso~body2$Grasa) # Opcion 1:
+
+
+lm(Peso~Grasa, data = body2) # Opcion 2
+
+```
+
+Para estimar el peso de un individuo hay que multiplicar la grasa, es decir 2.151 y al resultado final sumarle 137.738: 
+$$y = 2.151x + 137.738$$
+
+```{r}
+plot(body2)
+abline(lm(Peso~Grasa, data = body2), col = "purple")
+```
+
+### Resultados:
+
+```{r}
+summary(lm(Peso~Grasa, data = body2))
+summary(lm(Peso~Grasa, data = body2))$r.squared
+
+# Con un coeficiente de 0.37% no podemos afirmar que el peso y la grasa sigan un comportamiento lineal entre si. 
+```
+
+### Transformaciones
+
+#### Semilogaritmica
+
+```{r}
+
+dep = c(1.2, 3.6, 12, 36)
+ind = c(20, 35, 61, 82)
+
+plot(ind, dep, main = "Escala lineal")
+plot(ind, dep, log = "y", main = "Escala semilogaritmica en el eje Y") # esto se nos asemeja a una recta
+
+
+```
+
+
+```{r}
+lm(log10(dep)~ind)
+
+summary(lm(log10(dep)~ind))$r.squared # en efecto es una recta, porque si se ajusta bien con los datos ya transformados. Recordar que se transforma la variable dependiente (y).
+
+# La variable independiente es la X.
+
+plot(ind, dep, main = "Curva de regresion")
+curve(1.054^x*0.468, add = TRUE, col = "purple")
+```
+
+
+### Modelo potencial
+
+```{r}
+tiempo = 1:10 # independiente
+gramos = c(0.097, 0.709, 2.698, 6.928, 15.242, 29.944, 52.902, 83.903, 120.612, 161.711) # variable deendiente
+d.f = data.frame(tiempo, gramos)
+
+plot(d.f)
+plot(d.f, log = "y") # semilogarimico
+plot(d.f, log = "xy") # doble logaritmico
+
+lm(log10(gramos)~log10(tiempo), data = d.f)
+
+summary(lm(log10(gramos)~log10(tiempo), data = d.f))$r.squared # son variables dependientes
+
+plot(d.f, main = "Curva de Regresion")
+curve(x^(3.298)*0.081, add = TRUE, col = "purple")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
