@@ -1,0 +1,842 @@
+---
+title: "Distribuciones de probabilidad"
+author: "Heiner Romero Leiva"
+date: "10/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduccion a distribuciones de probabilidad
+
+Conceptos:
+
+**Experimento aleatorio**: Experimento que efectuado en las mismas condiciones puede dar lugar a resultados diferentes. 
+
+Ejemplo: Lanza una moneda es un experimento aleatorio.
+
+**Suceso Elemental**: Cada uno de los posibles resultados del experimento aleatorio.
+
+Ejemplo: Los sucesos elementales son: sacar cara (C) y sacar cruz(+)
+
+**Espacio muestreal**: Conjunto Omega formado por todos los sucesos elementales del experimento aleatorio. 
+
+Ejemplo: El espacio muestral de este experimento aleatorio es $\Omega$ = {C, +}
+
+**Suceso**: Subconjunto del espacio muestral.
+
+Ejemplo: sacar un numero par en los dados {2,4,6} o sacar un numero mayor que 4 {5,6} o sacar numeros multiples de 3 {3,6}.
+
+**Suceso total o seguro**: $\Omega$ 
+
+Ejemplo: El suceso total de este experimento aleatorio es $\Omega$ = {1,2,3,4,5,6}
+
+**Suceso vacio o imposible**: vacio
+
+Ejemplo: Un suceso imposible de este experimento aleatorio seria sacar un 7. 
+
+**Probabilidad de un suceso**: numero entre 0 y 1 (ambos incluidos) que mide la expectativa de que se de este suceso. 
+
+Ejemplo: 
+
+1. La probabilidad de sacar un 6 al lanzar un dado estandar no truncado es $1/6$.
+2. La probabilidad de sacar un 6 al lanzar un dado de 4 caras es $0$. 
+3. La probabilidad de sacar un 6 al lanzar un dado de 20 caras es $1/20$.
+
+**Variable Aleatoria**: es una aplicacion que asigna a cada suceso elemental de $w$ un numero real $X(w)$. Puede entenderse como una descripcion numerica de los resultados de un experimento aleatorio. 
+
+**Dominio de una variable aleatoria**: $D_{x}$ es el conjunto de valores que puede tomar. 
+
+#### Variables aleatorias discretas
+
+Las variables de este conjunto se caracterizan porque su dominio es finito o numerable, y es un subconjunto de R-> N. Si un suceso no es parte del dominio, sera 0. 
+
+Por ejemplo: la cantidad de caras de un dado, la edad de una persona. 
+
+
+**Esperanza de una v.a. discreta**: sea $f: D_{x} -> [0,1]$ la densidad de $X$, entonces la esperanza respecto de la densidad es la suma ponderada de los elementos de $D_{x}. multiplicando cada elemtno de $x$ de $D_{x}$ por su probabilidad, tal que:
+
+$$E(X) = \sum_{x \in D_{x}} x \cdot f(x)$$
+Si $g: D_{x} -> R$
+
+$$E(X) = \sum_{x \in D_{x}} g(x) \cdot f(x)$$
+
+**Varianza de una v.a. discreta: Sea $f: D_{x}-> [0,1]$ la densidad de $X$, entonces la varianza respecto de la densidad es el valor esperado de la diferencia al cuadrado entre $X$ y valor medio $E(X)$, 
+
+$$Var(X) = E((X=E(X))^2)$$
+La varianza mide como de variados son los resultados de $X$ respecto de la media. 
+
+O:
+
+$$Var(X) = E(X^2)-(E(X))^2$$
+
+**Desviacion tipica de una v.a. discreta**: Sea $f: D_{X} -> [0,1]$ la densidad de $X$, entonces la desviacion tipica respecto de la densidad es: 
+
+$$\sigma(X)= \sqrt{VAR(X)}$$
+
+#### Tipos de sesgos en las distribuciones de probabilidad:
+
+<center>
+
+![Tipos de distribuciones y sus sesgos](/Users/heinerleivagmail.com/Desktop/Screen Shot 2020-10-15 at 01.57.51.png)
+
+<center>
+
+Ejemplo:
+
+<center>
+
+![Ejemplo de sesgos a la derecha](/Users/heinerleivagmail.com/Desktop/Screen Shot 2020-10-15 at 02.07.59.png)
+
+<center>
+
+
+#### Distribucion de Bernoulli:
+
+Si $X$ es variable aleatoria que mide el "numero de exitos" y se realiza un unico experimento con dos posibles resultados (exito, que toma valor de 1, o fracaso, que toma el valor de 0), diremos que $X$ se distribuye como una Bernoulli con parametro $p$:
+
+$X$ ~ $Be(p)$
+
+donde $p$ es la probabilidad de exito y que $q = 1 - p$ es la probabilidad de fracaso.
+
+* El dominio de $X$ sera $X(\Omega) = {0,1}$
+* La funcion de probabilidad vendra por:
+
+$$    
+f(k) = p^k(1-p)^{1-k} = \left\{
+\begin{array}{rl}
+        p & \text{si } k=1
+        \\ 1-p & \text{si } k=0
+        \\ 0& \text{en cualquier otro caso}
+\end{array}
+\right.
+$$
+
+
+Ejemplo: tirar una moneda y que salga cara o cruz, es exito o fracaso. 
+
+La distribucion vendra dada por:
+
+$$    
+f(k)  = \left\{
+\begin{array}{rl}
+      0 & \text{si } \ k < 0\\
+      q & \text{si } \ 0 ≤  k < 1 \\
+      1 & \text{si } \ k ≥ 1
+\end{array}
+\right.
+$$
+
+
+* Esperanza $E(X) = p$
+* Varianza $Var(X) = pq$
+
+<center>
+
+![Formas de calculo en cada lenguaje](/Users/heinerleivagmail.com/Desktop/Screen Shot 2020-10-15 at 02.35.35.png)
+
+<center>
+
+#### Funcion de densidad:
+
+$$f(k) = p^k(1-p)^{1-p},\ k\in \{0,1\}$$
+
+#### Ejemplo en R:
+
+Hay que instalar: install.packages("Rlab")
+
+p
+
+```{r}
+library(Rlab)
+
+dbern(0, prob = 0.7) # recorda que esto nos dice la probabilidad de exito o fallo [1,0]
+dbern(1, prob = 0.7)
+pbern(0, prob = 0.7) # acumulada en 0
+pbern(1, prob = 0.7) # acumulada en 1
+qbern(0.5, prob = 0.7) # la mediana de la distribicion de bernoulli, el 50% de los datos estaran en 1.
+qbern(0.25, prob = 0.7) # el 25% de los datos estaran en 0
+rbern(100, prob = 0.7) -> data
+
+hist(data) # se puede ver que se cumple el principio, 30% de los datos son 0 y 70% de los datos es 1. 
+```
+
+#### Distribucion Binomial
+
+Si $X$ es varoable aleatoria que mide el "numero de exitos" y se realizan $n$ ensayos de Bernoulli independientes entre si, diremos que $X$ se distribuye como una Binomial con parametros $n$ y $p$.
+
+$X$ ~ $B(n,p)$
+
+donde $p$ es la probabilidad de exito y $q = 1-p$ es la probabilidd de frascaso.
+
+* El domonio de $X$ sera $D_{X} = {0,1,2,..., n}$
+* La funcion de densidad vendra dada por:
+
+$$f(k) = (\frac{n}{k})p^{k}(1-p)^{n-k}$$
+En este caso, la probabilidad puede ser 1, 2, 3, ..., n. 
+
+- La **función de distribución** vendrá dada por 
+
+$$F(x) = \left\{
+\begin{array}{cl}
+     0 & \text{si } x<0 
+  \\ \sum_{k=0}^xf(k) & \text{si } 0\le x<n
+  \\ 1 & \text{si } x\ge n
+\end{array}
+\right.$$
+
+
+- **Esperanza** $E(X) = np$
+- **Varianza** $Var(X) = npq$
+
+<l class = "important">Atención.</l> Observar que la distribución de Bernoulli es un caso particular de la Binomial. Basta tomar $n=1$ y tendremos que $X\sim \text{Be}(p)$ y $X\sim\text{B}(1,p)$ son equivalentes.
+
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+plot(0:50,dbinom(0:50,50,0.5),col = "purple", xlab = "", ylab = "", main = "Función de probabilidad de una B(50,0.5)")
+plot(0:50, pbinom(0:50,50,0.5),col = "purple", xlab = "", ylab = "", main = "Función de distribución de una B(50,0.5)", ylim = c(0,1))
+par(mfrow= c(1,1))
+
+```
+
+Nota: 
+1.La funcion por la izquierda empieza en 0 y termina en 1.
+2. La probabilidad de sacar 25 caras es un poco mayor a un 10%.
+
+El código de la distribución Binomial:
+
+- En `R` tenemos las funciones del paquete `Rlab`: `dbinom(x, size, prob), pbinom(q,size, prob), qbinom(p, size, prob), rbinom(n, size, prob)` donde `prob` es la probabilidad de éxito y `size` el número de ensayos del experimento.
+- En `Python` tenemos las funciones del paquete `scipy.stats.binom`: `pmf(k,n,p), cdf(k,n,p), ppf(q,n,p), rvs(n, p, size)` donde `p` es la probabilidad de éxito y `n` el número de ensayos del experimento.
+
+#### Ejercicios:
+
+#### Funcion de densidad 
+
+Sea $X = B(n = 30, p = 0.6)$, en este caso se van a hacer 30 experimentos con probabibilidad 0.6. 
+
+```{r}
+n = 30
+p = 0.6
+dbinom(0:30, size = n, prob = p) #La probabilidad de sacar entre 0 y 30 exitos, sabiendo que lka muestra es 30 veces el experimento y la probabilidad es de 0.6.
+
+# La probabilidad de sacar un 0 es 1.43, de sacar un 1 es 3.71, la sacar un 2 es 4.79 (...)
+
+```
+
+```{r}
+plot(0:n, dbinom(0:n, size = n, prob = p)) # probabilidad absoluta
+plot(0:n, pbinom(0:n, size = n, prob = p)) # probabilidad acumulada
+```
+
+
+```{r}
+qbinom(0.5, n,p) # la mediana de esta binomial es 18, es decir, el 50% de los experimentos esta por debajo de 18 exitos. 
+qbinom(0.25, n, p) # el 25% del experimento esta por debajo de 16 exitos. 
+```
+```{r}
+hist(rbinom(100000, n, p), breaks = 0:30) # es similar a la funcion de densidad
+```
+
+
+#### Distribución Geométrica
+
+Si $X$ es variable aleatoria que mide el "número de repeticiones independientes del experimento hasta haber conseguido éxito", diremos que $X$ se distribuye como una Geométrica con parámetro $p$
+
+$$X\sim \text{Ge}(p)$$
+donde $p$ es la probabilidad de éxito y $q = 1-p$ es la probabilidad de fracaso
+
+- El **dominio** de $X$ será $D_X= \{0,1,2,\dots\}$ o bien $D_X = \{1,2,\dots\}$ en función de si empieza en 0 o en 1, respectivamente
+
+- La **función de probabilidad** vendrá dada por $$f(k) = (1-p)^{k}p \qquad\text{ si empieza en 0}$$
+$$f(k) = (1-p)^{k-1}p \qquad\text{ si empieza en 1}$$
+
+#### Ejemplo: 
+
+Recordar que esta funcion se modela por la probabilidad de exito asociada, entonces un ejemplo puede ser:
+
+1. Si una persona esta ebria, y anda un juego de llaves y tiene n cantodad de llaves, entonces tienen que probar n veces hasta tener un exito. Sin embargo, tener cuidado porque se puede probar 500 veces y hay un fallo, pero se prueba 100 mas y hay fallo, entonces no hay exito.
+2. Cuando una pareja intenta quedar embarazada, el exito va a estar modelado por cuando la mujer logre quedar embarazada. 
+
+
+#### Distribución Geométrica
+
+- La **función de distribución** vendrá dada por 
+
+$$F(x) = \left\{
+\begin{array}{cl}
+     0 & \text{si } x<0 
+  \\ 1-(1-p)^{k+1} & \text{si } k\le x<k+1,\ k\in\mathbb{N}
+\end{array}
+\right.$$ 
+
+
+- **Esperanza** $E(X) = \frac{1-p}{p}$ si empieza en 0 y E$(X) = \frac{1}{p}$ si empieza en 1
+- **Varianza** $Var(X) = \frac{1-p}{p^2}$
+- <l class = "prop">Propiedad de la falta de memoria.</l> Si $X$ es una v.a. $\text{Ge}(p)$, entonces, $$p\{X\ge m+n:\ X\ge n\} = p\{X\ge m\}\ \forall m,n=0,1,\dots$$
+
+#### Distribución Geométrica
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+plot(0:20, dgeom(0:20,0.5),col = "purple", xlab = "", ylab = "", main = "Fun de proba de una Ge(0.5)")
+
+plot(0:20, pgeom(0:20,0.5),col = "purple", xlab = "", ylab = "", main = "Fun de distri de una Ge(0.5)", ylim = c(0,1))
+par(mfrow= c(1,1))
+```
+
+#### Distribución Geométrica
+
+El código de la distribución Geométrica:
+
+- En `R` tenemos las funciones del paquete `Rlab`: `dgeom(x, prob), pgeom(q, prob), qgeom(p, prob), rgeom(n, prob)` donde `prob` es la probabilidad de éxito  del experimento.
+- En `Python` tenemos las funciones del paquete `scipy.stats.geom`: `pmf(k,p), cdf(k,p), ppf(q,p), rvs(p, size)` donde `p` es la probabilidad de éxito del experimento.
+
+
+#### Ejemplo distribucion Geometrica (Discreta)
+
+Sea $X = Geom(p=0.1)$ la distribucion que modela la probabilidade intentar abrir una puerta hasta conseguirlo. 
+
+$$f(k)= (1-p)^{k-1}p$$
+
+
+```{r}
+p = 0.1
+dgeom(0:10, p) # los intentos van bajando para el primero es 0.1, el segundo es 0.09, etc.
+plot(0:20, dgeom(0:20, p))
+
+plot(0:20, pgeom(0:20, p), ylim = c(0,1))
+
+qgeom(0.5, p)
+qgeom(0.75, p) 
+
+rgeom(10, p) # 10 datos aleatorios con la misma probabilidad
+# una vez ha probado 13 veces hasta que la ha abierto. 
+# la segunda 8 veces. 
+# la tercera a la primera vez lo ha abierto, etc. (...)
+
+hist(rgeom(10000, p))
+```
+
+
+#### Distribución Hipergeométrica
+
+Consideremos el experimento "extraer a la vez (o una detrás de otra, sin retornarlos) $n$ objetos donde hay $N$ de tipo A y $M$ de tipo B". Si $X$ es variable aleatoria que mide el "número de objetos del tipo A", diremos que $X$ se distribuye como una Hipergeométrica con parámetros $N,M,n$
+$$X\sim \text{H}(N,M,n)$$
+
+- El **dominio** de $X$ será $D_X = \{0,1,2,\dots,N\}$ (en general)
+- La **función de probabilidad** vendrá dada por 
+
+$$f(k) = \frac{{N\choose k}{M\choose n-k}}{N+M\choose n}$$
+
+Por ejemplo: se tiene una bolsa o una caja y se tienen objetos de dos tipos, entonces contabiliza la cantidad de $n$ objetos extraidos y sin retornarlos. Donde podemos obtener un objeto A y de B, solo de A, o solo de B y con $n$ combinatorias conocidas. Este es un problema tradicional de combinatorias. Aunque se trabaka tradicionalmente con bolas, se puede aplicar a infinidad de escenarios, como peces (diferentes especies) o diversos animales, diversos tipos de zapatos, diversos tipos de monedas, etc. 
+
+#### Distribución Hipergeométrica
+
+- La **función de distribución** vendrá dada por $$F(x) = \left\{
+\begin{array}{cl}
+     0 & \text{si } x<0 
+  \\ \sum_{k=0}^xf(k) & \text{si } 0\le x<n
+  \\ 1 & \text{si } x\ge n
+\end{array}
+\right.$$
+- **Esperanza** $E(X) = \frac{nN}{N+M}$ 
+- **Varianza** $Var(X) = \frac{nNM}{(N+M)^2}\cdot\frac{N+M-n}{N+M-1}$
+
+#### Distribución Hipergeométrica
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+plot(0:30, dhyper(0:30,10,20,10),col = "purple", xlab = "", ylab = "", main = "Función de probabilidad de una H(20,10,30)")
+plot(0:30, phyper(0:30,10,20,10),col = "purple", xlab = "", ylab = "", main = "Función de distribución de una H(20,10,30)", ylim = c(0,1))
+par(mfrow= c(1,1))
+```
+
+#### Distribución Hipergeométrica
+
+El código de la distribución Hipergeométrica:
+
+- En `R` tenemos las funciones del paquete `Rlab`: `dhyper(x, m, n, k), phyper(q,  m, n, k), qhyper(p,  m, n, k), rhyper(nn,  m, n, k)` donde `m` es el número de objetos del primer tipo, `n` el número de objetos del segundo tipo y `k` el número de extracciones realizadas.
+- En `Python` tenemos las funciones del paquete `scipy.stats.hypergeom`: `pmf(k,M, n, N), cdf(k,M, n, N), ppf(q,M, n, N), rvs(M, n, N, size)` donde `M` es el número de objetos del primer tipo, `N` el número de objetos del segundo tipo y `n` el número de extracciones realizadas.
+
+
+#### Ejemplo:
+
+Supongamos que tenemos 20 animales, de los cuales 7 son perros. Queremos medir la probabilidad de encontrar un numero determinado de perros si elegimos $x=12$ animales al azar.
+
+```{r}
+M = 7 # cantidad de perros
+N = 13 # otros animales
+k = 12 # cantidad de extracciones
+
+dhyper(x = 0:12, m = M, n = N, k = k)
+
+# La probabilidad de que me salgan 0 perros es de: 0.0001031992, de que me salga un perro: 0.004334365, de que me salgan dos perros es de: 0.0476780186 y asi concecutivamente. 
+
+phyper(q = 0:12, m = M, n = N, k = k) # acumulada
+
+qhyper(0.5, m = M, n = N, k = k) # la mediana es 4 perros. 
+
+rhyper(nn = 1000, m = M, n = N, k = k) -> data
+
+hist(data, breaks = 8)
+
+```
+
+#### Distribución de Poisson
+
+Si $X$ es variable aleatoria que mide el "número de eventos en un cierto intervalo de tiempo", diremos que $X$ se distribuye como una Poisson con parámetro $\lambda$
+
+$$X\sim \text{Po}(\lambda)$$
+donde $\lambda$ representa el número de veces que se espera que ocurra el evento durante un intervalo dado
+
+- El **dominio** de $X$ será $D_X = \{0,1,2,\dots\}$
+
+- La **función de probabilidad** vendrá dada por $$f(k) = \frac{e^{-\lambda}\lambda^k}{k!}$$
+
+#### Ejemplo:
+
+El numero de personas por unidad de tiempo, por ejemplo el numero de personas que entran a una tienda por cada minuto/hora. 
+
+El numero de errores que hay por cada pagina en un libro. 
+
+#### Distribución de Poisson
+ 
+- La **función de distribución** vendrá dada por $$F(x) = \left\{
+\begin{array}{cl}
+     0 & \text{si } x<0 
+  \\ \sum_{k=0}^xf(k) & \text{si } 0\le x<n
+  \\ 1 & \text{si } x\ge n
+\end{array}
+\right.$$ 
+- **Esperanza** $E(X) = \lambda$
+- **Varianza** $Var(X) = \lambda$
+
+#### Distribución de Poisson
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+plot(0:20, dpois(0:20,2),col = "purple", xlab = "", ylab = "", main = "Función de probabilidad de una Po(2)")
+plot(0:20, ppois(0:20,2),col = "purple", xlab = "", ylab = "", main = "Función de distribución de una Po(2)", ylim = c(0,1))
+par(mfrow= c(1,1))
+```
+
+#### Distribución de Poisson
+
+El código de la distribución de Poisson:
+
+- En `R` tenemos las funciones del paquete `Rlab`: `dpois(x, lambda), ppois(q,lambda), qpois(p,lambda), rpois(n, lambda)` donde `lambda` es el número esperado de eventos por unidad de tiempo de la distribución.
+- En `Python` tenemos las funciones del paquete `scipy.stats.poisson`: `pmf(k,mu), cdf(k,mu), ppf(q,mu), rvs(M,mu)` donde `mu` es el número esperado de eventos por unidad de tiempo de la distribución.
+
+#### Distribución de Poisson
+
+Supongamos que $x$ modela el numero de errores por pagina que tiene un valor esperado $\lambda = 5$.
+
+```{r}
+l = 5
+dpois(x = 0:10, lambda = l) # probabilidad de 0 errores: 0.006737947  de 5 errores: 0.17546737 
+
+plot(0:20, dpois(x = 0:20, lambda = l))
+
+
+```
+```{r}
+ppois(0:20, l) # acumulada
+
+qpois(0.5, 5) # mediana
+
+rpois(1000, lambda = l) -> data
+
+hist(data)
+```
+
+
+#### Distribución Binomial Negativa
+
+Si $X$ es variable aleatoria que mide el "número de repeticiones hasta observar los $r$ éxitos en ensayos de Bernoulli", diremos que $X$ se distribuye como una Binomial Negativa con parámetros $r$ y $p$, $$X\sim\text{BN}(r,p)$$ donde $p$ es la probabilidad de éxito.
+
+Mide la cantidad de exitos obtenido en un dominio. 
+
+- El **dominio** de $X$ será $D_X = \{r, r+1, r+2,\dots\}$
+- La **función de probabilidad** vendrá dada por $$f(k) = {k-1\choose r-1}p^r(1-p)^{k-r}, k\geq r$$
+
+Ejemplo 1: caja de cerillas de Banach. 
+Ejemplo 2: Tenemos dos cajas de cigarrillos, una de cada lado en cada uno de los bolsillos de nuestro pantalon, cuando nos acabamos una caja de cigarrillos, cuantos cigarrillos nos quedan en la restante. 
+
+
+#### Distribución Binomial Negativa
+ 
+- La **función de distribución** no tiene una expresión analítica. 
+- **Esperanza** $E(X) = \frac{r}{p}$
+- **Varianza** $Var(X) = r\frac{1-p}{p^2}$
+
+#### Distribución Binomial Negativa
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+exitos = 5
+size = 20
+plot(c(rep(0,exitos),exitos:(size+exitos)), c(rep(0,exitos),dnbinom(0:size,exitos,0.5)),col = "purple", xlab = "", ylab = "", main = "Función de probabilidad de una BN(5, 0.5)")
+plot(c(rep(0,exitos),exitos:(size+exitos)), c(rep(0,exitos),pnbinom(0:size,exitos,0.5)),col = "purple", xlab = "", ylab = "", main = "Función de distribución de una BN(5, 0.5)")
+par(mfrow= c(1,1))
+```
+
+#### Distribución  Binomial Negativa
+
+El código de la distribución Binomial Negativa:
+
+- En `R` tenemos las funciones del paquete `Rlab`: `dnbinom(x, size, prop), pnbinom(q, size, prop), qnbinom(p, size, prop), rnbinom(n, size, prop)` donde `size` es el número de casos exitosos y `prob` la probabilidad del éxito.
+- En `Python` tenemos las funciones del paquete `scipy.stats.nbinom`: `pmf(k,n,p), cdf(k,n,p), ppf(q,n,p), rvs(n,p)` donde `n`es el número de casos exitosos y `p` la probabilidad del éxito.
+
+#### Ejemplo: 
+
+Supongamos que tenemos dos cajas de bolas y cada una de ellas tienen 120 bolitas, calcule cuanta es la probabilidad de que en una caja queden 5 bolitas despues de sacar aleatoriamente cantidades aleatorias de ellas, con una probabilidad dada de 0.4. 
+
+```{r}
+x = 0:30
+size = 5
+prop = 0.4
+
+dnbinom(x, size, prop)
+
+# La probabilidad de que nos queden 5 bolitas en 0 es de 0.0102400000, en 1 es de 0.0307200000 (...)
+
+```
+
+
+```{r}
+pnbinom(x, size, prop) # probabilidad acumulada
+
+```
+```{r}
+
+qnbinom(0.25, size, prop) # el 25% de los datos o menos van a ser 4 bolitas que queden 
+qnbinom(0.5, size, prop) # el 50% de los datos van a ser 7 bolitas o menos que queden
+qnbinom(0.75, size, prop) # 75% de los datos o menos van a ser 10 bolitas o menos. 
+```
+```{r}
+rnbinom(500, size, prop) # cantidad de probabilidades de exito para 500 numeros aleatorios. 
+```
+
+
+# Variables aleatorias continuas
+
+#### Variable aleatoria continua
+
+<l class = "definition">Variable aleatoria continua.</l> Una v.a. $X:\Omega\longrightarrow\mathbb{R}$ es continua cuando su función de distribución $F_X:\mathbb{R}\longrightarrow[0,1]$ es continua
+
+En este caso, $F_X(x)=F_X(x^-)$ y, por este motivo, $$p(X=x)=0\ \forall x\in\mathbb{R}$$
+pero esto no significa que sean sucesos imposibles
+
+#### Función de densidad
+
+<l class = "definition">Función de densidad.</l> Función $f:\mathbb{R}\longrightarrow\mathbb{R}$ que satisface 
+
+- $f(x)\ge 0\ \forall x\in\mathbb{R}$
+- $\int_{-\infty}^{+\infty}f(t)dt=1$
+
+Una función de densidad puede tener puntos de discontinuidad
+
+#### Variable aleatoria continua
+
+Toda variable aleatoria $X$ con función de distribución 
+
+$$F(x)=\int_{-\infty}^{x}f(t)dt\ \forall x\in\mathbb{R}$$ para cualquier densidad $f$ es una v.a. continua
+
+Diremos entonces que $f$ es la función de densidad de $X$
+
+A partir de ahora, considerareos solamente las v.a. $X$ continuas que tienen función de densidad
+
+
+#### Esperanza
+
+<l class = "definition">Esperanza de una v.a. continua.</l> Sea $X$ v.a. continua con densidad $f_X$. La esperanza de $X$ es $$E(X)=\int_{-\infty}^{+\infty}x\cdot f_X(x)dx$$
+
+Si el dominio $D_X$ de $X$ es un intervalo de extremos $a<b$, entonces $$E(X)=\int_a^b x\cdot f_X(x)dx$$
+
+#### Esperanza
+
+Sea $g:D_X\longrightarrow \mathbb{R}$ una función continua. Entonces, 
+
+$$E(g(X)) = \int_{-\infty}^{+\infty}g(x)\cdot f_X(x)dx$$
+
+Si el dominio $D_X$ de $X$ es un intervalo de extremos $a<b$, entonces $$E(g(X))=\int_a^b g(x)\cdot f_X(x)dx$$
+
+#### Varianza
+
+<l class = "definition">Varianza de una v.a. continua.</l> Como en el caso discreto, $$Var(X)=E((X-E(X))^2)$$
+
+y se puede demostrar que
+
+$$Var(X)=E(X^2)-(E(X))^2$$
+
+#### Desviación típica
+
+<l class = "definition">Desviación típica de una v.a. continua.</l> Como en el caso discreto, $$\sigma = \sqrt{Var(X)}$$
+
+#### Distribuciones continuas más conocidas
+
+#### Distribuciones continuas
+
+- [Uniforme](https://es.wikipedia.org/wiki/Distribución_uniforme_continua)
+- [Exponencial](https://es.wikipedia.org/wiki/Distribución_exponencial)
+- [Normal](https://es.wikipedia.org/wiki/Distribución_normal)
+- [Khi cuadrado](https://es.wikipedia.org/wiki/Distribución_χ²)
+- [t de Student](https://es.wikipedia.org/wiki/Distribución_t_de_Student)
+- [F de Fisher](https://es.wikipedia.org/wiki/Distribución_F)
+
+
+#### Distribución Uniforme
+
+Una v.a. continua $X$ tiene distribución uniforme sobre el intervalo real $[a,b]$ con $a<b$, $X\sim\text{U}(a,b)$ si su función de densidad es $$f_X(x)=\left\{
+\begin{array}{rl}
+     \frac{1}{b-a} & \text{si } a\le x\le b
+  \\ 0 & \text{en cualquier otro caso}
+\end{array}
+\right.$$
+
+Modela el elegir un elemento del intervalo $[a,b]$ de manera equiprobable.
+
+#### Ejemplo:
+
+Elegir un numero al azar entre $a$ y $b$, es una distribucion uniforme en dicho intervalo porque es equiprobable. 
+
+Posibilidad de mover un jugador en un juego en diferentes tipos de angulos o direcciones. 
+
+#### Distribución Uniforme
+
+- El **dominio** de $X$ será $D_X = [a,b]$
+
+- La **función de distribución** vendrá dada por $$F_X(x)=\left\{
+\begin{array}{rl}
+    0 & \text{si } x<a
+  \\ \frac{x-a}{b-a} & \text{si } a\le x< b
+  \\ 1 & \text{si } x\ge b
+\end{array}
+\right.$$
+
+- **Esperanza** $E(X) = \frac{a+b}{2}$
+- **Varianza** $Var(X) = \frac{(b-a)^2}{12}$
+
+#### Distribución Uniforme
+
+```{r, echo = FALSE}
+par(mfrow=c(1,2))
+plot(c(0,1,1:4,4,5), c(0,0,dunif(1:4,min = 1, max = 4),0,0),col = "purple", xlab = "", ylab = "", main = "Función de densidad de una U(1,4)", type = "o", ylim = c(0,1))
+plot(0:5, punif(0:5,min = 1, max = 4),col = "purple", xlab = "", ylab = "", main = "Función de distribución de una U(1,4)", type = "o")
+par(mfrow=c(1,1))
+```
+
+
+#### Distribución Uniforme
+
+El código de la distribución Uniforme:
+
+- En `R` tenemos las funciones del paquete `stats`: `dunif(x, min, max), punif(q, min, max), qunif(p, min, max), runif(n,  min, max)` donde `min` y `max` són los extremos de los intervalos de la distribución uniforme.
+- En `Python` tenemos las funciones del paquete `scipy.stats.uniform`: `pdf(k,loc, scale), cdf(k,loc, scale), ppf(q,loc, scale), rvs(n,loc, scaler)` donde la distribución uniforme está definida en el intervalo `[loc, loc+scale]`.
+
+
+#### Distribución Uniforme
+
+Supongamos que $X\sim u([0,1])$ entonces podemos estudiar sus parametros:
+
+```{r}
+# Recordar que en estas distribuciones la probabilidad asociada va a ser 0. Y solo sera diferente de 0, en rangos definidos. 
+
+a = 0
+b = 1
+
+x = seq(-0.1, 1.1, 0.1)
+plot(dunif(x, min = a, max = b)) # la probabilidad en el rango 0, 1 en todo ese intervalo vale 1. 
+plot(punif(x, a, b), type = 'l')
+qunif(0.5, a, b)
+runif(10000, a, b) -> data
+hist(data) # son equiprobables 
+
+runif(100000, a, b) -> data
+hist(data) # son equiprobables 
+
+
+# Comprobando con otros valores
+
+a = 5
+b = 90
+
+x = seq(5, 90, 5)
+plot(dunif(x, min = a, max = b)) # la probabilidad en el rango 0, 1 en todo ese intervalo vale 1. 
+plot(punif(x, a, b), type = 'l')
+qunif(0.5, a, b)
+qunif(0.25, a, b)
+runif(10000, a, b) -> data
+hist(data) # son equiprobables 
+
+runif(100000, a, b) -> data
+hist(data) # son equiprobables 
+
+
+```
+
+
+#### Distribución Exponencial
+
+Una v.a. $X$ tiene distribución exponencial de parámetro $\lambda$, $X\sim\text{Exp}(\lambda)$, si su función de densidad es $$f_X(x)=\left\{
+\begin{array}{rl}
+     0 & \text{si }  x\le 0
+  \\ \lambda\cdot e^{-\lambda x} & \text{si }x>0
+\end{array}
+\right.$$
+
+<l class = "prop">Teorema. </l> Si tenemos un proceso de Poisson de parámetro $\lambda$ por unidad de tiempo, el tiempo que pasa entre dos sucesos consecutivos es una v.a. $\text{Exp}(\lambda)$ 
+
+<l class = "prop">Propiedad de la pérdida de memoria. </l> Si $X$ es v.a. $\text{Exp}(\lambda)$, entonces $$p(X>s+t\ :\ X>s)=p(X>t)\ \forall s,t>0$$
+
+#### Por ejemplo: 
+
+Frecuencia del bus, es decir, el tiempo que espera una persona para tomar un bus; es una exponencial de parametro $\lambda$ (propiedad de falta de memoria). 
+
+#### Distribución Exponencial
+
+- El **dominio** de $X$ será $D_X = [0,\infty)$
+
+- La **función de distribución** vendrá dada por $$F_X(x)=\left\{
+\begin{array}{rl}
+    0 & \text{si } x\le 0
+  \\ 1-e^{-\lambda x} & \text{si } x>0
+\end{array}
+\right.$$
+
+- **Esperanza** $E(X) = \frac{1}{\lambda}$
+- **Varianza** $Var(X) = \frac{1}{\lambda^2}$
+
+#### Distribución Exponencial
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+plot(0:20, dexp(0:20,0.2),col = "purple", xlab = "", ylab = "", main = "Función de densidad de una Exp(0.2)", type = "o")
+plot(0:20, pexp(0:20,0.2),col = "purple", xlab = "", ylab = "", main = "Función de distribución de una Exp(0.2)", type = "o", ylim = c(0,1))
+par(mfrow = c(1,1))
+```
+
+
+#### Distribución Exponencial
+
+El código de la distribución Exponencial:
+
+- En `R` tenemos las funciones del paquete `stats`: `dexp(x, rate), pexp(q, rate), qexp(p, rate), rexp(n,  rate)` donde `rate`$=\lambda$ es el tiempo entre dos sucesos consecutivos de la distribución.
+- En `Python` tenemos las funciones del paquete `scipy.stats.expon`: `pdf(k, scale), cdf(k, scale), ppf(q, scale), rvs(n, scaler)` donde `scale`$=1/\lambda$ es la inversa del tiempo entre dos sucesos consecutivos de la distribución.
+
+
+#### Distribución Normal
+
+Una v.a. $X$ tiene distribución normal o gaussiana de parámetros $\mu$ y $\sigma$, $X\sim\mathcal{N}(\mu,\sigma)$ si su función de densidad es $$f_X(x)=\frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\quad \forall x\in\mathbb{R}$$
+
+La gráfica de $f_X$ es conocida como la <l class = "definition">Campana de Gauss</l>
+
+Cuando $\mu = 0$ y $\sigma = 1$, diremos que la v.a. $X$ es <l class = "definition">estándar</l> y la indicaremos usualmente como $Z$, la cual tendrá función de densidad
+$$f_Z(z)=\frac{1}{\sqrt{2\pi}}e^{-\frac{z^2}{2}}\quad \forall z\in\mathbb{R}$$
+
+#### Distribución Normal
+
+- **Esperanza** $E(X) = \mu$
+- **Varianza** $Var(X) = \sigma^2$
+
+En particualr, si $Z$ sigue una distribución estándar,
+
+- **Esperanza** $E(X) = 0$
+- **Varianza** $Var(X) = 1$
+
+#### Distribución Normal
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2))
+z_scores <- seq(-10, 10, by = .1)
+dvalues <- dnorm(z_scores)
+plot(z_scores, dvalues, ylab = "", xlab= "",
+     type = "l", 
+     col = "purple",
+     main = "Función de densidad de una N(0,1)")
+dvalues <- pnorm(z_scores)
+plot(z_scores, dvalues, ylab = "", xlab= "",
+     type = "l", 
+     col = "purple",
+     main = "Función de distribución de una N(0,1)", ylim = c(0,1))
+par(mfrow = c(1,1))
+```
+
+#### Distribución Normal
+
+El código de la distribución Normal:
+
+- En `R` tenemos las funciones del paquete `stats`: `dnorm(x, mean, sd), pnorm(q,  mean, sd), qnorm(p,  mean, sd), rnorm(n,   mean, sd)` donde `mean` es la media y `sd` es la desviación estándar de la normal $N(\mu, \sigma)$.
+- En `Python` tenemos las funciones del paquete `scipy.stats.normal`: `pdf(k, mu, scale), cdf(k,  mu, scale), ppf(q,  mu, scale), rvs(n,  mu, scale)`  donde `mu` es la media y `scale` es la desviación estándar de la normal $N(\mu, \sigma)$.
+
+
+#### Distribución Normal
+
+<l class = "prop">Estandarización de una v.a. normal.</l> Si $X$ es una v.a. $\mathcal{N}(\mu,\sigma)$, entonces $$Z=\frac{X-\mu}{\sigma}\sim\mathcal{N}(0,1)$$
+
+Las probabilidades de una normal estándar $Z$ determinan las de cualquier $X$ de tipo $\mathcal{N}(\mu,\sigma)$:
+
+$$p(X\le x)=p\left(\frac{X-\mu}{\sigma}\le\frac{x-\mu}{\sigma}\right)=p\left(Z\le\frac{x-\mu}{\sigma}\right)$$
+
+#### Distribución Normal
+
+$F_Z$ no tiene expresión conocida.
+
+Se puede calcular con cualquier programa, como por ejemplo R, o bien a mano utilizando las [tablas de la $\mathcal{N}(0,1)$](https://github.com/joanby/r-basic/blob/master/teoria/TablaNormal.pdf)
+
+Con las tablas se pueden calcular tanto probabilidades como cuantiles
+
+#### Distribución Normal en R y Python
+
+Si a la hora de llamar a alguna de las 4 funciones siguientes: `dnorm`, `pnorm`, `qnorm` o `rnorm` no especificásemos los parámetros de  la media ni la desviación típica, R entiende que se trata de la normal estándar: la $\mathcal{N}(0,1)$.
+
+Es decir, R interpreta $\mu = 0$ y $\sigma = 1$
+
+En Python ocurre exactamente lo mismo.
+
+#### Otras distribuciones importantes
+
+- La distribución $\chi^2_k$, donde $k$ representa los grados de libertad de la misma y que procede de la suma de los cuadrados de $k$ distribuciones normales estándar independientes:
+
+$$X = Z_1^2 + Z_2^2+\cdots + Z_k^2\sim \chi_k^2$$
+
+#### Otras distribuciones importantes
+
+- La distribución $t_k$ surge del problema de estimar la media de una población normalmente distribuida cuando el tamaño de la muestra es pequeña y procede del cociente
+
+$$T = \frac{Z}{\sqrt{\chi^2_k/k}}\sim T_k$$
+
+#### Otras distribuciones importantes
+
+- La distribución $F_{n_1,n_2}$ aparece frecuentemente como la distribución nula de una prueba estadística, especialmente en el análisis de varianza. Viene definida como el cociente
+
+$$F = \frac{\chi^2_{n_1}/n_1}{\chi^2_{n_2}/n_2}\sim F_{n_1,n_2}$$
+
+#### Distribuciones continuas en R y Python
+
+Distribución |  Instrucción en R |  Instrucción en Python |  Parámetros                                
+--------------------|--------------------|--------------------|--------------------
+Uniforme | `unif` | `scipy.stats.uniform` | mínimo y máximo
+Exponencial | `exp` | `scipy.stats.expon` | $\lambda$
+Normal | `norm` | `scipy.stats.normal` | media $\mu$, desviación típica $\sigma$
+Khi cuadrado | `chisq` | `scipy.stats.chi2` | grados de libertad
+t de Student | `t` | `scipy.stats.t` | grados de libertad
+F de Fisher | `f` | `scipy.stats.f` | los dos grados de libertad
+
+#### Otras distribuciones conocidas
+
+- Distribución de Pareto (Power Law)
+- Distribución Gamma y Beta
+- Distribución Log Normal
+- Distribución de Weibull
+- Distribución de Cauchy
+- Distribución Exponencial Normal
+- Distribución Von Mises
+- Distribución Rayleigh
+- ...
+
+
+
