@@ -1,9 +1,0 @@
-
-/* Esto es para limitar la cantidad de filas que se pueden ver en las transacciones.*/
-
-
-SELECT 
-occurred_at, account_id, channel
-FROM web_events 
-LIMIT 15
-
