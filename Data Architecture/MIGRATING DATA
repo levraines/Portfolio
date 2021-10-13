@@ -1,0 +1,28 @@
+-- Inserting data
+
+-- INSERT INTO table_name (column list in the order it's returned by the SELECT) SELECT …
+
+INSERT INTO "categories" ("name") SELECT DISTINCT "category" FROM "books";
+
+-- Migrate people
+INSERT INTO "people" ("first_name", "last_name")
+  SELECT "first_name", "last_name" FROM "denormalized_people";
+  
+  
+-- Migrate people's emails using the correct ID
+ SELECT "first_name", "last_name", REGEXP_SPLIT_TO_TABLE("emails", ',')
+ FROM "denormalized_people";
+
+
+INSERT INTO "people_emails"
+SELECT
+  "p"."id",
+  REGEXP_SPLIT_TO_TABLE("dn"."emails", ',')
+FROM "denormalized_people" "dn"
+JOIN "people" "p" ON (
+  "dn"."first_name" = "p"."first_name"
+  AND "dn"."last_name" = "p"."last_name"
+);
+
+
+

@@ -1,0 +1,16 @@
+SELECT accounts.name, web_events.channel, Count(*)
+FROM accounts
+JOIN web_events ON accounts.id = Web_events.account_id
+GROUP BY 1, 2
+ORDER BY 1,3;
+
+SELECT T1.name, Max(T1.count)
+FROM (
+       SELECT accounts.name as name, web_events.channel as channel, Count(*) as count
+       FROM accounts
+       JOIN web_events ON accounts.id = Web_events.account_id
+       GROUP BY 1, 2
+       ORDER BY 1,3
+) as T1
+GROUP BY 1
+

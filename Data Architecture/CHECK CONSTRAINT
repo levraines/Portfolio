@@ -1,0 +1,17 @@
+-- CHECK CONSTRAINTS
+
+-- CHECK constraints allow us to implement custom business rules at the level of the database. Examples of such rules would be: 
+-- "a product can't have a negative quantity" or "the discount price should always be less than the regular price".
+
+ALTER TABLE "items"
+ADD CONSTRAINT "non_negative_quantity" CHECK ("quantity" > 0);
+
+-- A CHECK constraint can be added either after a table was created, or during table creation. 
+-- Like all other constraints, it can be added along with the column definition, or along with all the column definitions.
+
+-- The general syntax of the constraint is: CHECK (some expression that returns true or false). 
+-- The expression can target one column, multiple columns, and use any Postgres functions to do its checking.
+
+ALTER TABLE "items" ADD CONSTRAINT "item_must_have_name"
+CHECK(LENGTH(TRIM("name")) > 0);
+

@@ -1,0 +1,66 @@
+-- For each account, determine the average amount of each type of paper they purchased 
+-- across their orders. Your result should have four columns - one for the 
+-- account name and one for the average quantity purchased for each of the paper types for each account.
+
+SELECT 
+a.name as account_name, 
+AVG(o.standard_qty) as avg_standard_qty,
+AVG(o.gloss_qty) as avg_gloss_qty, 
+AVG(o.poster_qty) as avg_poster_qty
+FROM accounts AS a
+JOIN orders AS O
+on a.id = o.id
+GROUP BY account_name;
+
+-- For each account, determine the average amount spent per order on each paper type. Your result should have 
+-- four columns - one for the account name and one for the average amount spent on each paper type.
+
+
+SELECT 
+a.name as account_name, 
+AVG(o.standard_amt_usd) as avg_standard_amt,
+AVG(o.gloss_amt_usd) as avg_gloss_amt, 
+AVG(o.poster_amt_usd) as avg_poster_amt
+FROM accounts AS a
+JOIN orders AS O
+on a.id = o.id
+GROUP BY account_name;
+
+-- Determine the number of times a particular channel was used in the web_events table for each sales rep. 
+-- Your final table should have three columns - the name of the sales rep, the channel, and the number of occurrences. 
+-- Order your table with the highest number of occurrences first.
+
+SELECT s.name AS sales_rep_name, 
+w.channel AS channel,
+COUNT(w.channel) as num_events
+FROM sales_reps AS s
+JOIN accounts as a
+ON s.id = a.sales_rep_id
+JOIN web_events AS w
+ON a.id = w.account_id
+GROUP BY sales_rep_name, channel
+ORDER BY num_events DESC;
+
+-- Determine the number of times a particular channel was used in the web_events table 
+-- for each region. Your final table should have three columns - the region name, the channel, 
+-- and the number of occurrences. Order your table with the highest number of occurrences first.
+
+SELECT r.name AS region_name, 
+w.channel AS channel,
+COUNT(w.channel) as num_events
+FROM region as r
+JOIN sales_reps AS s
+ON r.id = s.region_id
+JOIN accounts as a
+ON s.id = a.sales_rep_id
+JOIN web_events AS w
+ON a.id = w.account_id
+GROUP BY region_name, channel
+ORDER BY num_events DESC;
+
+
+
+
+
+
+

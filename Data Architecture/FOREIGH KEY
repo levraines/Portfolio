@@ -1,0 +1,19 @@
+-- FOREIGH KEY
+
+ALTER TABLE "comments"
+    ADD FOREIGH KEY ("user_id") REFERENCES "users" ("id");
+    
+ALTER TABLE "comments"
+    ADD FOREIGH KEY ("user_id") REFERENCES "users"; -- both examples work.
+    
+
+-- We can add foreign key constraints while creating a table, either by adding a REFERENCES clause with the column definition, or by adding a 
+-- CONSTRAINT … FOREIGN KEY clause along with all the column definitions.
+
+FOREIGN KEY "referencing_column" 
+REFERENCES "referenced_table" ("referenced_column");
+
+-- If we omit the ("referenced_column") part of the foreign key definition, then it will be implied that 
+-- we are referencing the primary key of the referenced table. 
+-- this is one more thing that makes primary key constraints special compared to unique constraints.
+

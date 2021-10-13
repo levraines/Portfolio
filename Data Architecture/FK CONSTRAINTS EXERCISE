@@ -1,0 +1,28 @@
+-- Exercise Instructions
+
+/*
+For this exercise, you're going to add some foreign key constraints to an existing schema, but you'll have to respect some business rules that were put in place:
+
+As a first step, please explore the currently provided schema and understand the relationships between all the tables
+Once that's done, please create all the foreign key constraints that are necessary to keep the referential integrity of the schema, with the following in mind:
+When an employee who's a manager gets deleted from the system, we want to keep all the employees that were under him/her. They simply won't have a manager assigned to them.
+We can't delete an employee as long as they have projects assigned to them
+When a project gets deleted from the system, we won't need to keep track of the people who were working on it.
+/*
+
+ALTER TABLE "employees"
+  ADD CONSTRAINT "valid_manager"
+  FOREIGN KEY ("manager_id") REFERENCES "employees" ("id") ON DELETE SET NULL;
+
+ALTER TABLE "employee_projects"
+  ADD CONSTRAINT "valid_employee"
+  FOREIGN KEY ("employee_id") REFERENCES "employees" ("id");
+
+ALTER TABLE "employee_projects"
+  ADD CONSTRAINT "valid_project"
+  FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE CASCADE;
+  
+
+
+
+

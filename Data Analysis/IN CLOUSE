@@ -1,0 +1,16 @@
+-- Use the accounts table to find the account name, primary_poc, and sales_rep_id for Walmart, Target, and Nordstrom.
+
+SELECT 
+name, primary_poc, sales_rep_id
+FROM accounts
+WHERE name in ('Walmart', 'Target', 'Nordstrom')
+ORDER BY name DESC
+LIMIT 3; -- mucho ojo aca, porque en el DESC en numeros empieza del numero mayor al menor, pero en letras empieza desde la Z hasta la A
+
+-- Use the web_events table to find all information regarding individuals who were contacted via the channel of organic or adwords.
+
+SELECT *
+FROM web_events
+WHERE channel in ('organic', 'adwords');
+
+
