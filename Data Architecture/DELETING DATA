@@ -1,8 +1,0 @@
--- Deleting Data
-
-DELETE FROM "users" WHERE "state" = 'NY';
-
-DELETE FROM "users" WHERE
-(CURRENT_TIMESTAMP - "date_of_birth") < INTERVAL '21 years' -- Interval of 21 years
-FROM "users";
-

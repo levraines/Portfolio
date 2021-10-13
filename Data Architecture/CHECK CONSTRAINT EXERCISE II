@@ -1,7 +1,0 @@
--- Given a table users with a date_of_birth column of type DATE, write the SQL to add a requirement for users to be at least 18 years old.
-
-ALTER TABLE "users"
-  ADD CONSTRAINT "users_must_be_over_18" CHECK (
-    CURRENT_TIMESTAMP - "date_of_birth" > INTERVAL '18 years'
-  );
-  
