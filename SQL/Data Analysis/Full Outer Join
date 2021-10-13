@@ -1,0 +1,27 @@
+-- each account who has a sales rep and each sales rep that has an account (all of the columns in these returned rows will be full)
+
+SELECT s.name, a.name
+FROM sales_reps AS s
+FULL OUTER JOIN 
+accounts as a
+ON s.id = a.sales_rep_id;
+
+SELECT *
+  FROM accounts
+ FULL JOIN sales_reps ON accounts.sales_rep_id = sales_reps.id;
+
+-- but also each account that does not have a sales rep and each sales rep that does not have an 
+-- account (some of the columns in these returned rows will be empty)
+
+SELECT s.name, a.name
+FROM sales_reps AS s
+FULL OUTER JOIN 
+accounts as a
+ON s.id = a.sales_rep_id 
+WHERE a.sales_rep_id IS NULL OR s.id IS NULL;
+
+SELECT *
+  FROM accounts
+ FULL JOIN sales_reps ON accounts.sales_rep_id = sales_reps.id
+ WHERE accounts.sales_rep_id IS NULL OR sales_reps.id IS NULL;
+ 

@@ -1,0 +1,6 @@
+-- What's the correct syntax for making the already existing column quantity of the items
+-- table only accept integers that are strictly larger than zero?
+
+ALTER TABLE "items"
+CHECK ("quantity" > 0);
+

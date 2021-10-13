@@ -1,0 +1,91 @@
+-- Which account (by name) placed the earliest order? Your solution should have the account name and the date of the order.
+
+SELECT a.name as account_name,
+o.occurred_at as earliest_order
+FROM orders as o
+JOIN accounts as a
+ON o.id = a.id
+ORDER BY o.occurred_at ASC
+LIMIT 1;
+
+-- Find the total sales in usd for each account. You should include two columns - 
+-- the total sales for each company's orders in usd and the company name.
+
+SELECT a.name as account_name,
+SUM(o.total_amt_usd) as total_amount
+FROM orders as o
+JOIN accounts as a
+ON a.id = o.id
+GROUP BY a.name;
+
+-- Via what channel did the most recent (latest) web_event occur, which account was associated with this web_event? 
+-- Your query should return only three values - the date, channel, and account name.
+
+SELECT w.channel, 
+w.occurred_at, 
+a.name
+FROM web_events AS w
+INNER JOIN accounts as a
+ON a.id = w.id
+ORDER BY w.occurred_at DESC
+LIMIT 1;
+
+-- Find the total number of times each type of channel from the web_events was used. 
+-- Your final table should have two columns - the channel and the number of times the channel was used.
+
+SELECT COUNT(occurred_at) as number_timees, 
+channel
+FROM web_events
+GROUP BY channel;
+
+SELECT w.channel, COUNT(*)
+FROM web_events w
+GROUP BY w.channel;
+
+
+
+-- Who was the primary contact associated with the earliest web_event?
+
+SELECT a.primary_poc AS Primary_contact
+FROM accounts AS a
+INNER JOIN web_events AS w
+on a.id = w.account_id
+ORDER BY w.occurred_at
+LIMIT 1;
+
+-- What was the smallest order placed by each account in terms of total usd. P
+-- rovide only two columns - the account name and the total usd. Order from smallest dollar amounts to largest.
+
+SELECT a.name AS account_name,
+MIN(o.total_amt_usd) AS smallest_order
+FROM orders AS o
+INNER JOIN accounts AS a
+ON a.id = o.account_id
+GROUP BY a.name
+ORDER BY smallest_order;
+
+-- Find the number of sales reps in each region. Your final table should have two columns - 
+-- the region and the number of sales_reps. Order from fewest reps to most reps.
+
+SELECT COUNT(s.id) AS number_reps,
+r.name AS region
+FROM region AS r
+INNER JOIN sales_reps AS s
+ON r.id = s.region_id
+GROUP BY r.name
+ORDER BY number_reps ASC;
+
+
+SELECT r.name, COUNT(*) num_reps
+FROM region r
+JOIN sales_reps s
+ON r.id = s.region_id
+GROUP BY r.name
+ORDER BY num_reps;
+
+-- Recordar que en el order by ya se puede poner el renombre de la variable
+
+
+
+
+

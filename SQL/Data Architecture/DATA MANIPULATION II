@@ -1,0 +1,65 @@
+-- Data Manipulation
+
+-- If you are exploring a new database that you're not familiar with and would
+--  like to see the effect of running some DML queries, make sure that you \set AUTOCOMMIT 
+-- off before. You'll be in a much safer position, and any mistakes you make can be manually rolled back using the ROLLBACK command.
+
+-- In the context of interacting with Postgres through an application layer, we can do 
+-- the same thing: if the application detects an error condition in the middle of a transaction, 
+-- it can issue a ROLLBACK to abort the whole transaction, and return an error to the user.
+
+-- For this exercise, you'll be given a table called user_data, and asked to make some changes to it. 
+-- In order to make sure that your changes happen coherently, you're asked to turn off auto-commit, 
+-- and create your own transaction around all the queries you will run.
+
+-- Here are the changes you will need to make:
+
+-- Due to some obscure privacy regulations, all users from California and New York must be removed from the data set.
+-- For the remaining users, we want to split up the name column into two new columns: first_name and last_name.
+-- Finally, we want to simplify the data by changing the state column to a state_id column.
+-- First create a states table with an automatically generated id and state abbreviation.
+-- Then, migrate all the states from the dataset to that table, taking care to not have duplicates.
+-- Once all the states are migrated and have their unique ID, add a state_id column to the user_data table.
+-- Use the appropriate query to make the state_id of the user_data column match the appropriate ID from the new states table.
+-- Remove the now redundant state column from the user_data table.
+
+SET AUTOCOMMIT off;
+
+-- Do everything in a transaction
+BEGIN;
+
+
+-- Remove all users from New York and California
+DELETE FROM "user_data" WHERE "state" IN ('NY', 'CA');
+
+
+-- Split the name column in first_name and last_name
+ALTER TABLE "user_data"
+  ADD COLUMN "first_name" VARCHAR,
+  ADD COLUMN "last_name" VARCHAR;
+
+UPDATE "user_data" SET
+  "first_name" = SPLIT_PART("name", ' ', 1),
+  "last_name" = SPLIT_PART("name", ' ', 2);
+
+ALTER TABLE "user_data" DROP COLUMN "name";
+
+
+-- Change from state to state_id
+CREATE TABLE "states" (
+  "id" SMALLSERIAL,
+  "state" CHAR(2)
+);
+
+INSERT INTO "states" ("state")
+  SELECT DISTINCT "state" FROM "user_data";
+
+ALTER TABLE "user_data" ADD COLUMN "state_id" SMALLINT;
+
+UPDATE "user_data" SET "state_id" = (
+  SELECT "s"."id"
+  FROM "states" "s"
+  WHERE "s"."state" = "user_data"."state"
+);
+
+ALTER TABLE "user_data" DROP COLUMN "state";

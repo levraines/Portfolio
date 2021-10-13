@@ -1,0 +1,18 @@
+-- FK Constraints: Modifiers
+
+-- Adding ON DELETE CASCADE to a foreign key constraint will have the effect that when the referenced data gets 
+-- deleted, the referencing rows of data will be automatically deleted as well.
+
+-- Adding ON DELETE SET NULL to a foreign key constraint will have the effect that when the referenced
+-- data gets deleted, the referring column will have its value set to NULL. Since NULL is a special value, it 
+-- won't break the foreign key constraint because it will be clear that that row of data is now referencing absolutely nothing.
+
+-- Given a table books with id, title, and author_id which references the id column of another table called authors, 
+-- what is the proper syntax to add a foreign key constraint that will make sure that all books belonging to an author 
+-- get deleted if the author gets deleted?
+
+ALTER TABLE "books" ADD
+FOREIGN KEY ("author_id")
+REFERENCES "authors" ("id") ON DELETE CASCADE;
+
+

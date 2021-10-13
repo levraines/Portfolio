@@ -1,0 +1,16 @@
+-- Performance Tunning
+
+SELECT o.occurred_at AS date,
+       a.sales_rep_id,
+       o.id AS order_id,
+       we.id AS web_event_id
+FROM   accounts a
+JOIN   orders o
+ON     o.account_id = a.id
+JOIN   web_events we
+ON     DATE_TRUNC('day', we.occurred_at) = DATE_TRUNC('day', o.occurred_at)
+ORDER BY 1 DESC;
+
+-- Query a list of CITY names from STATION for cities that have an even ID number. Print the results in any order, but exclude duplicates from the answer.
+
+SELECT DISTINCT(CITY) FROM STATION WHERE (ID%2)=0;
