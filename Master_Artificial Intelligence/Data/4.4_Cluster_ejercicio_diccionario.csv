@@ -1,0 +1,17 @@
+Variable,Descripción
+State,Nombre del estado
+PercentSmallBiz,Porcentaje de pequeños negocios
+PercentEmplySmallBiz,Porcentaje de empleo estatal procedente de pequeños negocios
+AvgEmPerSmallBiz,Porcentaje de empleados por cada pequeño negocio
+MedIncomeSelfEmpCorp,Mediana del salario de autonómos trabajando para grandes empresas
+MedIncomeSelfEmpUnincorp,Mediana del salario de autonómos trabajando para pequeñas empresas
+PercentExportSmallBiz,Porcentaje de exportadores que son pequeños negocios
+PercentExportValue,Porcentaje del valor exportado por pequeños negocios
+StateGDPGrowth,Crecimiento del PIB del estado
+StateUnemployRate,Tasa de desempleo del estado
+ShareManufactEmploy,Porcentaje de pequeños negocios pertenecientes al sector secundario
+AvgEmpPerWOB,Promedio de empleados por pequeños negocios regentados por mujeres
+AvgEmpPerVOB,Promedio de empleados por pequeños negocios regentados por veteranos de guerra
+AvgEmpPerMOB,Promedio de empleados por pequeños negocios regentados por minorías étnicas
+ShareProSvcEmploy,Porcentaje de pequeños negocios pertenecientes al sector terciario
+GrowthNumPropiertors,Crecimiento de propietarios de pequeños negocios vs año anterior
