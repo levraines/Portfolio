@@ -1,0 +1,202 @@
+---
+title: 'MÓDULO 1: HERRAMIENTAS BIG DATA'
+author: "Heiner Romero Leiva"
+date: "24/12/2021"
+output:
+  word_document:
+subtitle: 'HERRAMIENTAS DE ANALISIS: PROGRAMACIÓN EN R - MICROACTIVIDADES 2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(pander)
+library(kableExtra)
+options(knitr.kable.NA = '')
+```
+
+# EJERCICIO 2
+
+Cargamos datos de nuevo.
+
+```{r}
+library(datos)
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+## EJERCICIO 2.1.
+
+Escribe un bucle for que sólo calcule la media de las columnas numéricas (de tipo integer o numeric) de `millas`. 
+
+```{r}
+# Solución:
+
+for(columna in colnames(millas))
+{
+  if(is.numeric(millas[[columna]]) | is.integer(millas[[columna]]))
+  {
+    print(paste0("La media de la columna ",columna, " es: ",round(mean(millas[[columna]]),2)))
+    
+  }
+}
+
+
+```
+
+
+## EJERCICIO 2.2.
+
+Haz lo mismo que en 2.1 pero utilizando `sapply()` en vez del bucle for.
+
+```{r}
+# Solución:
+round(sapply(select_if(millas, is.numeric), mean),2)
+
+```
+
+## EJERCICIO 2.3.
+
+Explica la diferencia entre la función `if()` e `ifelse()`. Pon un ejemplo de uso de ambas.
+
+```{r}
+# Solución:
+x <- 5
+if (x %% 2 == 0)
+{
+  print("Numero es par")
+} else {
+  print("Numero es impar")
+}
+
+
+a = c(11, 23, 56, 4)
+ifelse(a %% 2 == 0,"par","impar")
+
+```
+
+Explicación:
+
+Usamos la función "if" cuando deseamos que una operación se ejecute únicamente cuando una condición se cumple, de este modo si quisieremos evaluar si 5 es un número par (como en el ejemplo), y en caso afirmativo que nos dijera "número es par" se puede hacer con esta función porque solo estamos evaluando una única condición. En caso que deseemos que nos diga si es impar, se puede utilizar un "case" junto con esta función, de ahí que se evaluará dicho término por separado y nos dirá si es par o impar. Con el ejemplo se puede ver que 5 es un número impar. 
+
+En cambio con la función "ifelse" esta nos permite vectorizar if, else. En lugar de escribir una línea de código para cada comparación (como la descrita arriba) podemos usar una sola llamada a esta función, que se aplicará a todos los elementos de un vector, así no tendremos que evaluar cada término por separado, sino que se pueden evaluar una serie de elementos a la misma vez. Como se puede ver en el ejemplo se utilizó el vector a = c(11, 23, 56, 4) que está compuesto por 4 elementos y su resultado fue: "impar" "impar" "par"   "par", ya que dicha función evaluó cada uno de los elementos presentes.
+
+
+## EJERCICIO 2.4.
+
+¿Qué parámetros es imprescindible especificar cuando se leen datos de ancho fijo mediante: `read.fwf()`?
+
+Explica qué significan y pon un ejemplo.
+
+```{r}
+# Solución:
+
+ejemplo <- tempfile()
+cat(file = ejemplo, "1234567638", "9876545642", sep = "\n")
+read.fwf(ejemplo, widths = c(1,2,3,4), col.names = c("uno", "dos", "tres", "cuatro"))
+
+```
+Explicacion:
+
+Es necesario especificar "file" que es el nombre del archivo de donde los datos van a ser leídos. Además es necesario especificar "widths" ya que con este parámetro se especifica el ancho de los campos de ancho fijo (de una línea), o listado de vectores enteros dando anchos para registros de varias líneas, en el ejemplo proporcionado se utiliza  widths = c(1,2,3,4), esto significa que para la primera columna se utiliza un ancho de 1, para la segunda de 2, tercera de 3 y para la cuarta de 4, esto quiere decir que cada columna se creó siguiendo el ancho descrito en dicho parámetro. Los otros parámetros son opcionales. 
+
+
+## EJERCICIO 2.5.
+
+Calcula la media de millas/galón en autopista para cada `clase` de coche de `millas`.
+
+Presenta la tabla obtenida.
+
+```{r}
+# Solución:
+df <- aggregate(millas$autopista, list(millas$clase), FUN=mean)
+df
+```
+
+## EJERCICIO 2.6.
+
+Incorpora la media de calculada en 2.5. en el data frame `millas` como una nueva columna llamada "autopista_clase". 
+
+> Utiliza la funcion `merge()` para juntar el objeto obtenido en 2.5 con `millas`.
+
+Presenta el summary() de la nueva columna.
+
+```{r}
+# Solución:
+
+millas<-merge(millas, df, by.x="clase", by.y="Group.1", all=F)
+names(millas)[names(millas)=="x"] <- "autopista_clase"
+summary(millas$autopista_clase)
+
+```
+
+## EJERCICIO 2.7.
+
+Utiliza las funciones del package dplyr: `group_by()` y `mutate()` para realizar el mismo calculo que en 2.5. y 2.6. sin necesidad de utilizar `merge()`. Llama a la nueva columna "autopista_clase_dplyr"
+
+> Truco: Utiliza el siguiente ejemplo: `datos %>% group_by(var_seg) %>% mutate(nueva_variable=mean(variable))`
+
+Haz un `summary()` para verificar que el resultado es el mismo que en 2.6.
+
+```{r}
+# Solución:
+
+df_dplyr <- millas %>% group_by(clase) %>% mutate(autopista_clase_dplyr = mean(autopista))
+summary(df_dplyr)
+
+```
+
+## EJERCICIO 2.8.
+
+Analiza si `millas` tiene registros duplicados y en caso afirmativo crea un nuevo data frame que contenga una única copia de cada fila.
+
+```{r}
+# Solución:
+
+# Corroborando cantidad de duplicados
+dim(millas[duplicated(millas),])[1]
+
+# Quitando duplicados
+millas_unique <- unique(millas)
+
+# Corroborando que no existan duplicados
+dim(millas_unique[duplicated(millas_unique),])[1]
+
+```
+
+## EJERCICIO 2.9.
+
+Crea una función que tenga como input la fecha de tu nacimiento (en formato date) y devuelva tu edad en años.
+
+```{r}
+# Solución:
+
+library(lubridate)
+nacimiento <- as.Date("1992-12-16")
+
+edad_actual <- year(now()) - year(nacimiento)
+
+edad_actual
+```
+
+## EJERCICIO 2.10.
+
+Explica porqué el resultado de fechahora_1 y fechahora_2 son distintos en la siguiente expresión:
+
+```{r, warning=FALSE, message=FALSE}
+library(lubridate)
+Sys.setlocale(locale="es_ES.UTF-8")
+fechahora <- ymd_hms("2020-03-28 15:11:23", tz = "Europe/Madrid")
+fechahora_1 <- fechahora + dhours(24)
+fechahora_2 <- fechahora + hours(24)
+
+print(fechahora_1)
+print(fechahora_2)
+
+```
+
+Explicación: 
+
+"dhours" mide la cantidad exacta de tiempo que transcurre entre dos instantes. Esto puede generar resultados inesperados en relación con las horas del reloj si se produce un segundo bisiesto, un año bisiesto o un cambio en el horario de verano (DST) en el intervalo mientras que "hours" mide el cambio en el tiempo del reloj que ocurre entre dos instantes; "hours" proporciona predicciones sólidas de la hora del reloj en presencia de segundos bisiestos, años bisiestos y cambios en el horario de verano. 
+
+Para este caso en específico la hora cambia porque en ese momento hubo un cambio de horario y "dhours" lo asimiló mientras que "hours" no lo tomó en cuenta. 
+

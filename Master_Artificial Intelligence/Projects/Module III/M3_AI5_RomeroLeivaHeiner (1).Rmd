@@ -1,0 +1,271 @@
+---
+title: 'MÓDULO 3: GESTIÓN DE DATOS Y DATOS DIGITALES'
+author: "Heiner Romero Leiva"
+date: "16/03/2022"
+output:
+  html_document:
+subtitle: 'PENETRACIÓN Y CRECIMIENTO DE FACEBOOK'
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path="www/")
+library(knitr)
+library(pander)
+library(kableExtra)
+library(stringr)
+library(moments)
+library(stargazer)
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(cowplot))
+panderOptions('table.split.table', Inf)
+panderOptions('decimal.mark', ",")
+panderOptions('big.mark', ".")
+panderOptions('missing', "")
+options(knitr.kable.NA = '')
+```
+
+# EJERCICIO 1
+
+Carga los datos del fichero en un data frame y calcula “Facebook_por_num” = “porcentaje de usuarios de Facebook sobre el total de población”. Presenta el summary de todas las variables del data frame.
+Consejo: procura que Facebook_por_num tenga las mismas unidades de medida que Internet_por_num.
+
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/griu/mbdds_fc20/master/gestion_datos/www/fb_long.csv", header = TRUE, sep = ";", dec = ",")
+
+# Mostrando Dataframe 
+head(df)
+
+# Creado nueva variable
+df <- df %>%
+  mutate(Facebook_por_num = (Facebook_num / poblacion_num) * 100)
+
+# Creando resumen de todas las variables
+summary(df)
+```
+
+## EJERCICIO 2
+
+Haz un análisis univariante de Internet_por_num y Facebook_por_num separado por año. Calcula y comenta el histograma y estadísticos univariantes (centralización, dispersión, posición, concentración y forma).
+
+```{r, warning=FALSE}
+# Solución:
+
+# Creando filtro por año
+
+df_2010 <- df %>% filter (anyo == 2010)
+df_2018 <- df %>% filter (anyo == 2018)
+
+# Creando histograma para variable Internet_por_num en 2010 y 2018
+p1 <- df_2010 %>%
+  ggplot(aes(x = Internet_por_num),  na.rm = TRUE) +
+  geom_histogram(bins=nclass.Sturges(df_2010$Internet_por_num), color="black", fill="aquamarine") +
+  xlab("internet por numero") + ylab("conteo") +
+  ggtitle("Internet por num, 2010") +
+  theme(plot.title = element_text(hjust = 0.5))
+p2 <- df_2018 %>%
+  ggplot(aes(x = Internet_por_num),  na.rm = TRUE) +
+  geom_histogram(bins=nclass.Sturges(df_2018$Internet_por_num), color="black", fill="cyan3") +
+  xlab("internet por numero") + ylab("conteo") +
+  ggtitle("Internet por num, 2018") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Visualizando resultado
+plot_grid(p1, p2, nrow = 2)
+
+# Creando histograma para variable Facebook_por_num en 2010 y 2018
+p3 <- df_2010 %>%
+  ggplot(aes(x = Facebook_por_num),  na.rm = TRUE) +
+  geom_histogram(bins=nclass.Sturges(df_2010$Facebook_por_num), color="black", fill="cadetblue1") +
+  xlab("Facebook por num") + ylab("conteo") +
+  ggtitle("Facebook por num, 2010") +
+  theme(plot.title = element_text(hjust = 0.5))
+p4 <- df_2018 %>%
+  ggplot(aes(x = Facebook_por_num),  na.rm = TRUE) +
+  geom_histogram(bins=nclass.Sturges(df_2018$Facebook_por_num), color="black",fill="darkseagreen2")+
+  xlab("Facebook por num") + ylab("conteo") +
+  ggtitle("Facebook por num, 2018") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Visualizando resultado
+plot_grid(p3, p4, nrow = 2)
+
+# Centralización, dispersión, posición, concentración y forma: Internet_por_num en 2010 y 2018 y Facebook_por_num 2010 y 2018
+
+rbind(data.frame(Variable="Internet_por_num_2010",
+                 x=df_2010$Internet_por_num),
+      data.frame(Variable="Internet_por_num_2018",
+                 x=df_2018$Internet_por_num),
+      data.frame(Variable="Facebook_por_num_2010",
+                 x=df_2010$Facebook_por_num),
+      data.frame(Variable="Facebook_por_num_2018",
+                 x=df_2018$Facebook_por_num)) %>% 
+  group_by(Variable)%>%
+  summarise(media=mean(x, na.rm = TRUE),
+           sd=sd(x, na.rm = TRUE),
+           CV=sd(x, na.rm = TRUE)/mean(x, na.rm = TRUE),
+           asimetria=skewness(x, na.rm = TRUE),
+           apuntamiento=kurtosis(x, na.rm = TRUE),
+           minimo=min(x, na.rm = TRUE),
+           Q25=quantile(x,0.25, na.rm=TRUE),
+           mediana=median(x, na.rm = TRUE),
+           Q75=quantile(x,0.75, na.rm=TRUE),
+           maximo=max(x, na.rm = TRUE), .groups = 'drop') %>% 
+  pivot_longer(cols = -1, names_to = "Metrica", values_to = "Valor") %>% arrange(desc(Variable)) %>% 
+  pivot_wider(names_from = Variable, values_from = Valor)
+
+```
+Análisis: 
+
+Con respecto a la variable Internet_por_num, el histograma para el año 2010 no muestra normalidad, al igual que para el histograma del 2018 y ambos presentan asimetría negativa y Leptocúrtica (apuntamiento > 0). 
+
+Para el año 2010 la media fue de 48.17%, mientras que para el 2018 fue de 73.25%. La desviación típica par ael año 2010 es de 27.24% y para el 2018 es de 20.50% (esta se redujo). El coeficiente de variación para el año 2010 correspondió a 0.56% mientras que para el 2018 fue de 0.27%. Finalmente el valor más bajo en 2010 corresponde a 0.75% mientras que el más alto es de 93.39%. Con respecto al 2018 el más bajo era 16.60% y el más alto fue de 99.65%. Es decir, hubo un crecimiento a nivel de la cantidad de personas a nivel mundial que acceden a internet. 
+
+
+Con respecto a la variable Facebook_por_num, el histograma para el año 2010 no muestra normalidad, al igual que para el histograma del 2018. Para el 2010 hay asimetría positiva y para el 2018 hay asimetría negativa, aunque ambos presentan apuntamiento Leptocúrtica (apuntamiento > 0). 
+
+Para el año 2010 la media fue de 19.28%, mientras que para el 2018 fue de 48.85%. La desviación típica par ael año 2010 es de 16.69% y para el 2018 es de 21.12% (esta aumentó). El coeficiente de variación para el año 2010 correspondió a 0.86% mientras que para el 2018 fue de 0.437%. Finalmente el valor más bajo en 2010 corresponde a 0.008% mientras que el más alto es de 83.45%. Con respecto al 2018 el más bajo era 0.12% y el más alto fue de 90.33%. Es decir, también hubo un crecimiento a nivel de la cantidad de personas a nivel mundial que acceden a internet. 
+
+
+## EJERCICIO 3.
+
+Haz un gráfico para cada variable (Facebook_por_num y Internet_por_num) donde se pueda visualizar la variación entre 2010 y 2018 del valor medio (o el estadístico que prefieras). Explica qué observas en el gráfico.
+
+```{r}
+# Solución:
+
+# Convirtiendo variable de anyo a string para hacer la modificacion
+df_1 <- df %>% mutate(
+  anyo = as.character(anyo))
+
+p1 <- ggplot(df_1, aes(anyo, Facebook_por_num, color = anyo), na.rm = TRUE) +
+      ggtitle("Facebook_por/n 2010 y 2018") +
+       geom_boxplot()
+
+p2 <- ggplot(df_1, aes(anyo, Internet_por_num, color = anyo), na.rm = TRUE) +
+      ggtitle("Internet_por/n 2010 y 2018") +
+       geom_boxplot()
+
+# Visualizando resultado
+plot_grid(p1, p2, ncol = 2)
+
+```
+
+Análisis: 
+
+Con respecto a la variable de facebook por num, para el 2010 se puede apreciar que la mediana es de aproximadamente 17%, mientras que la de 2018 el valor aumentó y alcanzó casi 53%, esto lo que quiere decir, es que en 8 años la cantidad de personas que crearon cuentas de facebook aumentaron y la variación es de casi 36% con respecto a la mediana.
+
+En cuanto a la variable: Internet por num, en el 2010 era de 45%, mientras que en el 2018 llegó a más de 78%, esto quiere decir que en 8 años sí han aumentado la cantidad de usuarios de internet, con una variación de casi 33% con respecto a la mediana. 
+
+Si se compara ambas variables se puede observar que la variable facebook_por_num tuvo el mayor crecimiento en el mismo periodo de tiempo. 
+
+
+## EJERCICIO 4.
+
+Haz un análisis bivariante entre Facebook_por_num sobre Internet_por_num:
+1. Gráfico de dispersión separando el año de observación en colores distintos.
+2. Introduce, en el gráfico de dispersión, una recta de regresión (una por año).
+3. Comenta si crees que la relación observada es lineal.
+
+```{r, warning=FALSE}
+# Solución:
+
+grafico1 <- df %>%
+  ggplot(aes(x= df$Facebook_por_num, y = df$Internet_por_num, color = as.factor(anyo), group = anyo))+
+  geom_point()+
+  geom_smooth(method = 'lm', se = FALSE, aes(color = as.factor(anyo)))+
+  geom_smooth(method = 'loess', se = FALSE, aes(color = as.factor(anyo)))+
+  labs(x = "Porcentage de usuarios de Facebook", 
+       y = "Porcentage de usuarios de Internet")+
+  theme(legend.position = "top")
+
+# Visualizando resultado
+plot(grafico1, ncol = 2)
+
+
+# Creando dos gráficos separados para ver la relación lineal por año en cada una de las variables
+g1 <- df_2010 %>% 
+  ggplot(aes(x=Facebook_por_num, y=Internet_por_num), na.rm = TRUE)+
+  ggtitle("Facebook vs Internet, año 2010") +
+  geom_point(aes(colour = factor(anyo)))+
+  geom_smooth(method='lm', se=FALSE, aes(color = "lm"))+
+  geom_smooth(method='loess', se=FALSE, aes(color="loess"))+
+  theme(legend.position="top")
+
+g2 <- df_2018 %>% 
+  ggplot(aes(x=Facebook_por_num, y=Internet_por_num), na.rm = TRUE)+
+  ggtitle("Facebook vs Internet, año 2018") +
+  geom_point(aes(colour = factor(anyo)))+
+  geom_smooth(method='lm', se=FALSE, aes(color = "lm"))+
+  geom_smooth(method='loess', se=FALSE, aes(color="loess"))+
+  theme(legend.position="top")
+
+plot_grid(g1, g2, ncol = 2)
+
+```
+Análisis:
+
+A nivel general y apoyándome en el primer gráfico se puede ver como sí existe una relación lineal, ya que se puede observar como la regresión local (loess) se comporta de forma muy similar a la línea de regresión lineal (lm). 
+
+Tomando en cuenta el segundo gráfico (en el que se grafican por separado las variables por año) en el año 2010 se puede observar gracias a la regresión local (loess) que no existe una relación tan lineal entre las variables, ya que se puede ver que desvía al inicio y al final aunque sigue un patrón de comportamiento relativamente lineal no lo es tanto como para el año 2018 en que se puede observar que ambas variables sí tienen una relación lineal bastante fuerte, ya que la regresión local se comporta de forma similar a la recta de regresión. 
+
+## EJERCICIO 5
+
+Propón alguna transformación sobre las variables del análisis y argumenta cuál es la mejor.
+
+Análisis:
+
+A nivel de la variable internet_por_num, se propone una transformación no lineal elevando esta variable al cuadrado, ya que presenta asimetría negativa, sin embargo también se van a evaluar otras transformaciones para comprobar si el modelo mejora como la transformación log(x+1).
+
+
+## EJERCICIO 6
+
+Compara, mediante stargazer, los coeficientes de la recta de regresión de Facebook_por_num sobre Internet_por_num en 2010 y 2018. Interpreta el significado de los coeficientes de la regresión en cada año.
+
+```{r, warning=FALSE}
+# Solución:
+
+# Creando recta de regresión con las variables originales sin transformación
+suppressPackageStartupMessages(library(stargazer))
+
+model1 <- lm(Facebook_por_num ~  Internet_por_num, data=df_2010, na.rm = TRUE)
+model2 <- lm(Facebook_por_num ~  Internet_por_num, data=df_2018, na.rm = TRUE)
+
+stargazer(model1,model2,type="text")
+
+# Utilizando la transformacion al cuadrado
+model3 <- lm(Facebook_por_num ~ Internet_por_num 
+             + (Internet_por_num)**2,data=df_2010,na.rm = TRUE)
+model4 <- lm(Facebook_por_num ~ Internet_por_num
+             + (Internet_por_num)**2,data=df_2018,na.rm = TRUE)
+
+stargazer(model3,model4,type="text")
+
+# Utilizando la transformacion logaritmica
+model5 <- lm(Facebook_por_num ~  log(Internet_por_num), 
+             data=df_2010, na.rm = TRUE)
+model6 <- lm(Facebook_por_num ~  log(Internet_por_num), 
+             data=df_2018, na.rm = TRUE)
+
+stargazer(model5,model6,type="text")
+
+plot(model1, 1)
+plot(model2, 1)
+plot(model3, 1)
+plot(model4, 1)
+plot(model5, 1)
+plot(model6, 1)
+
+```
+
+Análisis: 
+
+A nivel del modelo 1 y 2, se puede observar como el coeficiente de determinación es bajo, 0.51 y 0.49 respectivamente (redondeados), esto lo que explica es que el modelo de regresión no es muy robusto y explica vagamente alguna porción de la variabilidad de los datos de respuesta en torno a su media. El error típico en el modelo 1 y 2 sí varía levemente, pero en ambos el error típico representa una medida de la parte de variabilidad de la variable dependiente que no es explicada por la recta de regresión. En general, cuanto mejor es el ajuste, más pequeño es este error típico y en ambos casos los errores generados son > 10. 
+
+Por último se utilizaron las variables con las transformaciones propuestas (x^2), pero en ambos casos el coeficiente de determinación no varió. 
+
+Cuando se hizo la comparación con la transformación log(x+1) y se observó que el coeficiente de determinación más bien bajó en ambos casos, por lo que, tampoco parece una buena transformación. 
+
+En resumen, las variables utilizadas para los modelos de regresión no son tan explicativas y por ende el modelo no es robusto. 
+
+Aunque si se analizan los residuos el modelo que parece tener los mejores resultados es el modelo 1, ya que en el eje de las ordenadas, todos los valores están muy cercanos a 0 y en el eje de las abscisas, los valores están muy cerca de la línea roja, por lo cual están estimando relativamente bien. Los otros gráficos sí muestran altos o bajos residuos con valores a predecir muy fuera de la línea roja. 
+
