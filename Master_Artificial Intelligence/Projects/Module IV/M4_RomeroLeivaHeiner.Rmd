@@ -1,0 +1,226 @@
+
+---
+title:    "Ejercicio práctico Clustering"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  word_document:  default
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  pdf_document:   default
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+# 1. Planteamiento del problema
+
+Para este ejercicio nos enfocaremos en los negocios que peor lo están pasando con esta crisis, los pequeños negocios. Las pequeñas empresas representan el 99% de todas las empresas en Estados Unidos y casi el 50% del empleo, así que son un motor indispensable para el desarrollo económico. 
+
+Todos los años, la Administración de Pequeñas Empresas de EE.UU. (SBA) publica una informe anual de la actividad de las pequeñas empresas en cada estado. Para este ejercicio, utilizaremos parte de los datos publicados por este organismo público e intentaremos obtener alguna conclusión mediante el Clustering.
+
+El dataset y el diccionario de datos podrás encontrarlo en la carpeta data.
+
+Así pues, lo primero que haremos es cargar el dataset en R:
+
+```{r,warning=FALSE,message=FALSE}
+# Carga paquetes necesarios
+require(factoextra)
+
+# Carga el dataset
+data <- read.csv("https://raw.githubusercontent.com/levraines/Portfolio/master/Master_Artificial%20Intelligence/Data/4.4_Cluster_ejercicio.csv", sep = ',')
+
+str(data)
+
+```
+
+## 1.1 Preparación del dataset.
+
+Tal y como podrás comprobar, el dataset tiene una dimensión de 51 observaciones (correspondientes a cada uno de los estados federales de USA) y 16 variables (correspondientes a datos económicos relativos a pequeños negocios). Si necesitas más información acerca de qué significa cada variable, podrás encontrarla en el diccionario de datos.
+
+Tal y como podrás comprobar, existen ciertas variables en las cuales hay asteriscos. Estos representan valores nulos (NA). Por tanto, hay que hacer un tratamiento de estas variables para poder aplicar el clustering.
+
+* **Ejercicio 1**: Reemplaza los valores nulos (asteriscos) por la mediana y transforma las variables tratadas a tipo numerico.
+
+```{r, warning=FALSE}
+# Primero se opta por reemplzar los '*' por NA
+levels(data$AvgEmpPerWOB)[levels(data$AvgEmpPerWOB) == "*"] <- "NA"
+levels(data$AvgEmpPerVOB)[levels(data$AvgEmpPerVOB) == "*"] <- "NA"
+levels(data$AvgEmpPerMOB)[levels(data$AvgEmpPerMOB) == "*"] <- "NA"
+levels(data$ShareProSvcEmploy)[levels(data$ShareProSvcEmploy) == "*"] <- "NA"
+
+# Modifico el tipo de las variables tratadas a numerico
+data$AvgEmpPerWOB <- as.double(as.character(data$AvgEmpPerWOB))
+data$AvgEmpPerVOB <- as.double(as.character(data$AvgEmpPerVOB))
+data$AvgEmpPerMOB <- as.double(as.character(data$AvgEmpPerMOB))
+data$ShareProSvcEmploy <- as.double(as.character(data$ShareProSvcEmploy))
+
+# Reemplazo los valores nulos por la mediana
+data$AvgEmpPerWOB[is.na(data$AvgEmpPerWOB)] <- median(data$AvgEmpPerWOB, na.rm = TRUE)
+data$AvgEmpPerVOB[is.na(data$AvgEmpPerVOB)] <- median(data$AvgEmpPerVOB, na.rm = TRUE)
+data$AvgEmpPerMOB[is.na(data$AvgEmpPerMOB)] <- median(data$AvgEmpPerMOB, na.rm = TRUE)
+data$ShareProSvcEmploy[is.na(data$ShareProSvcEmploy)] <- median(data$ShareProSvcEmploy, na.rm = TRUE)
+
+```
+
+Una vez realizada la imputación de los valores nulos, es necesario que observes el rango de las variables que vas a utilizar para el clustering y valores si es necesario transformarlas o no.
+
+* **Ejercicio 2**: Crea un nuevo dataframe con todas las variables estandarizadas en el cuál cada fila tenga como nombre cada uno de los estados.
+
+```{r}
+# Reescalo las variables creando un nuevo dataframe
+datos <- scale(data[2:16])
+datos <- as.data.frame(datos)
+
+# Añado la variable States como nombre de fila en el nuevo dataframe
+row.names(datos) <- data$State
+
+# Sumarizo las variables
+summary(datos)
+
+```
+
+## 1.2 Creación de los clusters
+
+Una vez disponemos del dataframe preparado, es necesario estimar el número de clusters óptimo. Pese a que puede ser un proceso subjetivo, existen algunos métodos que pueden ayudarnos a tomar la decisión.
+
+* **Ejercicio 3**: Elige el número de clusters óptimos mediante el método elbow. ¿Observas algún otro número que también podría ser óptimo? Justifica tu respuesta.
+
+```{r, warning=FALSE}
+# Visualización del elbow method
+fviz_nbclust(x = datos, FUNcluster = kmeans, method = "wss", k.max = 15, 
+             diss = get_dist(datos, method = "euclidean"), nstart = 50)
+
+```
+Análisis: en este caso con el método del codo, no se logra ver que haya una estabilización en algún punto. Quizá se puede partir de que en 3 clusters la reducción en la suma total de cuadrados internos parece estabilizarse, entonces se podría indicar que K = 3 parece una buena opción.
+
+Otro número que también se podría utilizar es K = 4, ya que también se observa que el codo en 4 se empieza a estabilizar mejor, por ende se puede trabajar con 4 clústers también. 
+
+* **Ejercicio 4**: Elige el número de clusters óptimos mediante la representación del dendrograma. ¿Observas algún otro número que también podría ser óptimo? Justifica tu respuesta.
+
+```{r, warning=FALSE}
+library(factoextra)
+# Visualización del dendrograma
+set.seed(101)
+hc_euclidea_completo <- hclust(d = dist(x = datos, method = "euclidean"),
+                               method = "complete")
+
+fviz_dend(x = hc_euclidea_completo, cex = 0.5, main = "Linkage completo",
+          sub = "Distancia euclídea") +
+  theme(plot.title =  element_text(hjust = 0.5, size = 15))
+
+```
+Análisis: utilizando el dendrograma considero que se puede utilizar 3 grupos definitivamente, ya que si se utilizan más de 3 puede ser que algún punto (estado) quede solo, es decir, un clúster para sí mismo, como el caso de District of Columbia y en los clústers cuando se tiene uno formado por un solo elemento no parece ser un clúster suficientemente robusto, ya que solo refleja la realidad de una observación y no existen similitudes con las demás.
+
+Una vez tomada la decisión del número de clusters a realizar, procedemos a crear y visualizar los clusters en dos dimensiones.
+
+* **Ejercicio 5**: Crea el número de clusters elegido y representalo en dos dimensiones utilizando la función fviz_cluster.
+
+```{r, warning=FALSE}}
+# Creacion de los clusters
+set.seed(123)
+km_clusters <- kmeans(x = datos, centers = 3, nstart = 50)
+options(ggrepel.max.overlaps = Inf)
+
+# Visualización de los clusters en 2 dimensiones
+fviz_cluster(object = km_clusters, data = datos, show.clust.cent = TRUE,
+             ellipse.type = "euclid", star.plot = TRUE, repel = TRUE) +
+  labs(title = "Resultados clustering K-means") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+```
+
+## 1.3 Interpretación de los clusters
+
+Una vez disponemos de la visualización en dos dimensiones de los estados que pertenecen a cada cluster creado, vamos a la parte interesante, la interpretación de estos.
+
+* **Ejercicio 6**: Elige qué estado consideras que es más representativo de cada cluster. Justifica tu respuesta.
+
+```{r}
+# Introduce aquí tu respuesta
+print("Para el clúster de color rojo, el estado que es más representativo es Montana, ya que es el que está en el centro del clúster y es el más representativo del mismo, ya que en los clúster se busca que los puntos que están dentro de ellos, las distancias sean muy pequeñas entre sí (cohesión) y muy distintos de los datos de los otros clúster (aislamiento). Utilizando la misma justificación se puede decir que para el clúster se color azul el estado más representativo es Washington y finalmente para el de color verde es Wisconsin.")
+
+```
+
+* **Ejercicio 7**: Indexa cada uno de los estados más representativos de cada cluster sobre el dataframe inicial y crea un nuevo tablón de datos en el que únicamente se encuentren estos estados. ¿Qué variables difieren en más en valor entre unos estados y otros?
+
+```{r}
+# Selecciono los estados que quiero ver en un vector
+estados<-c("Montana", "Washington", "Wisconsin")
+
+# Creo nuevo dataframe sobre el tablon inicial solo con los estados que quiero ver
+subset(datos, rownames(datos) %in% estados)
+
+# Introduce aquí tu respuesta
+print("Las variables que más difieren son: 
+      PercentEmplySmallBiz(Porcentaje de empleo estatal procedente de pequeños negocios) ya que esta tiene valores mayores a 3 para Montana y para los otros dos estados son muy pequeños o negativos.
+      AvgEmPerSmallBiz (Porcentaje de empleados por cada pequeño negocio) también es otra variable ya que cuenta con valores mayores a 2 para Wisconsin y para los otros es menor a 1 e incluso valores negativos. 
+      PercentExportValue (Porcentaje del valor exportado por pequeños negocios) se comporta de forma similar, ya que tiene valores altos para Montana y negativos para Washington y Wisconsin.
+      StateGDPGrowth (Crecimiento del PIB del estado) tiene un comportamiento similar a las otras variables, valores negativos para Montana y positivos para los otros dos estados.
+      ShareManufactEmploy (Porcentaje de pequeños negocios pertenecientes al sector secundario) tiene un comportamiento similar al ya mencionado y cuenta con valores grandes para Montana y bajos para los otros estados.
+      GrowthNumPropiertors (Crecimiento de propietarios de pequeños negocios vs año anterior) en esta variable se ve un cambio grande para el estado de Washington, para los otros dos estados esta variable tiene valores similares.
+      Para las otras variables los valores no difieren tanto y son bastante similares entre sí.")
+
+```
+
+* **Ejercicio 8**: ¿Cuál de los estados seleccionados en el ejercicio anterior tiene una tasa de desempleo más elevada?
+
+```{r}
+# Introduce aquí tu respuesta
+print("En este caso corresponde a Washington con un valor de 0.83 (valor real 0.05), lo que representa el valor más evelado de los tres estados en cuanto a desempleo, los estados están por debajo de dicha tasa.")
+
+```
+
+* **Ejercicio 9**: Si el presidente de los Estados Unidos quisiera lanzar una campaña para aumentar el volumen de exportaciones de pequeños negocios hacia el exterior sobre los estados que menos exportan del país, y con menor valor, qué cluster o clusters le propondrías? (Menciona únicamente el estado que consideres más representativo del cluster)
+
+```{r}
+# Introduce aquí tu respuesta
+print("Primero, en cuanto a los estados con menor porcentaje de exportadores que son pequeños negocios: yo le propondría el clúster que representa Montana, ya que este es el que tiene el porcentaje de exportadores que son pequeños negocios más bajo de los 3. 
+      
+      Segundo, en cuanto a los que tienen el porcentaje más bajo de valor exportado por pequeños negocios: los clúster que cuentan con el porcentaje del valor exportado por pequeños negocios más pequeño son Washington y Wisconsin, así que propondría trabajar con ellos en este apartado.")
+
+```
+
+* **Ejercicio 10**: ¿Qué cluster representa mejor a los pequeños negocios con más ingresos?
+
+```{r}
+# Introduce aquí tu respuesta
+print("Este es representado por Montana, ya que representa mejor a los pequeños negocios con más ingresos.")
+
+```
+
+## 1.4 Puntuación del del ejercicio
+
+Este ejercicio se puntuará con 10 puntos, siendo el mínimo necesario para superar la prueba de 5 puntos. 
+La puntuación es la siguiente:
+
+* Ejercicio 1: 0.5 puntos
+
+* Ejercicio 2: 0.5 puntos
+
+* Ejercicio 3: 1 punto
+
+* Ejercicio 4: 1 punto
+
+* Ejercicio 5: 1.5 puntos
+
+* Ejercicio 6: 1 punto
+
+* Ejercicio 7: 1.5 puntos
+
+* Ejercicio 8: 1 punto
+
+* Ejercicio 9: 1 punto
+
+* Ejercicio 10: 1 punto

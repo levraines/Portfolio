@@ -1,0 +1,162 @@
+
+---
+title:    "Ejercicio práctico Contraste de Hipótesis"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  word_document:  default
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  pdf_document:   default
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+# 1. Planteamiento del problema
+
+Para este ejercicio, nos enfocaremos en un caso clásico con el que te puedes encontrar en cualquier departamento de Marketing.
+
+Imagínate que trabajas en una aseguradora y desde el equipo de email marketing se está realizando una campaña de email sobre el subconjunto de clientes de la compaña que tienen contratada, al menos, una póliza de auto, para ofrecerles una póliza de hogar con unas condiciones más beneficiosas.
+
+La promoción consiste en ofrecer al cliente un seguro de hogar con coberturas ampliadas, tales como incluir un servicio de limpieza extra para el hogar o incluir un servicio de atención informática sin ningún coste adicional para el cliente. 
+
+A tal efecto, se envía un código único y personal en cada email que deberá ser utilizado a la hora de contratar el producto, por lo que es muy fácil saber si un cliente compra vinculado o no a esta campaña específica.
+
+Dicha campaña hará objetivo a 20000 de clientes y será lanzada en 3 olas distintas, con los siguientes objetivos:
+
+* Ola 1: 25% de los clientes
+* Ola 2: 25% de los clientes
+* Ola 3: 50% de los clientes
+
+Han llegado los resultados de la primera ola, y no está funcionando cómo se esperaba, ya que la tasa de conversión está siendo del 9.6%, cuando se esperaba que fuese superior.
+
+En vistas a un intento de mejorar en la segunda ola, el equipo de Pricing de la compaña ha estimado que el coste de los beneficios adicionales ofrecidos es del 10% en la póliza, y si se ofrece el descuento directo al cliente sin los beneficios adicionales en póliza, la tasa de conversión se estima que debería mejorar en un 1%, por lo que proponen aplicar ese coste como un descuento directo al cliente.
+
+Así pues, se decide enviar en la segunda ola un email a los clientes ofreciéndoles un descuento directo del 10% sobre del precio de la póliza. Una vez se reciben los resultados de la segunda ola, acuden a nuestro departamento para que analicemos, si merece la pena o no, aplicar los cambios propuestos por el equipo de Pricing para la tercera y definitiva ola. Los resultados de la segunda ola, son prometedores, ya que la tasa de conversión ha sido del 12.6%.
+
+# 1.1 Análisis del test AB
+
+Para este ejercicio, partimos de un baseline en el que se contratan el 9.6% de pólizas, y con la modificación propuesta por el equipo de pricing, se espera que dicha tasa de conversión mejore en un 1%
+
+Desde el equipo de Data Scientists europeos, se ha consensuado utilizar una serie de parámetros estándar para este tipo de tests, siendo los siguientes:
+
+* Poder: 90%
+* Nivel de significación: 0.01
+
+* **Ejercicio 1**: Indica la muestra de observaciones que necesitamos, al menos, en cada escenario para detectar si efectivamente el cambio producido será del 1%. ¿Es suficiente?
+
+```{r}
+# Parametros
+
+baseline  <- 0.096
+delta     <- 0.01
+power     <- 0.90
+sig_level <- 0.01
+
+# Funcion para saber el número de observaciones necesarias
+
+result <- power.prop.test(
+  p1 = baseline,
+  p2 = baseline + delta,
+  power = power,
+  sig.level = sig_level,
+  alternative = "two.sided"
+)
+result
+
+
+```
+Análisis:
+
+El resultado nos muestra que necesitamos una muestra de, al menos 27018 observaciones en cada escenario para detectar si efectivamente el cambio producido es de al menos 1%.
+
+Ahora bien, el cambio que se espera debe ser mayor a 1%, por ende se necesita mínimo una muestra de al menos 54034 (tomando en cuenta ambos grupos) por lo que, con el 25% de 20000 clientes, solo se llega a 5000 observaciones, por lo tanto no es suficiente lo que el equipo de Marketing está proponiendo. 
+
+--------------------------------------------------
+
+Viendo el problema por encima y sin ver los resultados, nuestro responsable de departamento habla directamente con el equipo de Data europeo para relajar la significación estadística del test y finalmente obtiene el permiso para hacerlo y aumentarla al 5%. Su decisión puede haber sido controvertida pero era necesario agilizar el proceso para poder lanzar la tercera ola de la campaña.
+
+* **Ejercicio 2**: ¿Crees que ha sido buena decisión la de nuestro responsable la de solicitar la modificación de la significación estadística para este test sin haber visto previamente los resultados? Qué muestra necesitaríamos actualmente con los nuevos cambios?
+
+```{r}
+# Parametros
+
+baseline  <- 0.096
+delta     <- 0.01
+power     <- 0.90
+sig_level <- 0.05
+
+# Funcion para saber el número de observaciones necesarias
+
+result <- power.prop.test(
+  p1 = baseline,
+  p2 = baseline + delta,
+  power = power,
+  sig.level = sig_level,
+  alternative = "two.sided"
+)
+result
+
+```
+
+Análisis:
+
+Si modificamos el nivel de significancia de 0.01 a 0.05, el resultado nos muestra que necesitamos una muestra de, al menos 19079 observaciones en cada escenario para detectar si efectivamente el cambio producido es de al menos 1%.
+
+Desde mi punto de vista sí tomó una buena decisión, pero tampoco fue la más óptima, ya que sin siquiera ver los datos, con un nivel de significancia de 0.01 necesitábamos primeramente una muestra de 27018 observaciones en cada grupo y cuando solicitó el nivel de significancia a 0.05 este disminuyó a una muestra de 19079 observaciones en cada grupo, es decir, necesitamos 7939 observaciones menos en cada grupo, aunque tampoco cumple con los paramétros que el equipo de marketing está proponiendo como punto de entrada. 
+
+
+* **Ejercicio 3**: Realiza un two-sample test utilizando el nivel de significación estadística propuesta por nuestro responsable de departament e indica si merece la pena realizar los cambios o no para la tercera ola de clientes.
+
+```{r}
+# Parametros
+count_control <- 480      # Numero de clicks en el baseline
+sizes_control <- 5000    # Numero de observaciones en el baseline, 25% de 20000
+count_experiment <- 630  # Numero de clicks en el nuevo escenario
+sizes_experiment <- 5000 #Numero de observaciones en el nuevo escenario, 25% de 2000
+
+# Realización del 2-sample test
+result <- prop.test( c(count_control, count_experiment), 
+                     c(sizes_control, sizes_experiment) )
+result
+
+# Computamos la probabilidad de cada grupo y el error estandar
+p1 <- count_control / sizes_control
+p2 <- count_experiment / sizes_experiment
+se <- sqrt( p1 * (1 - p1) / sizes_control + p2 * (1 - p2) / sizes_experiment )
+
+# 95 percent confidence interval's z score
+conf_level <- 0.95
+zscore <- qnorm( conf_level + (1 - conf_level) / 2 )
+conf_int <- abs(p2 - p1) + c(-1, 1) * zscore * se
+conf_int
+
+```
+Análisis:
+
+El cambio que se espera debe ser mayor a 1% y en los resultados de arriba se puede ver que nuestro intervalo de confianza se encuentra por encima de ese 1%
+(está entre 1.77% y 4.22%), por lo que definitivamente sí merece la pena hacer los cambios que propuso el encargado del departamento.
+
+
+## 1.2 Puntuación del del ejercicio
+
+Este ejercicio se puntuará con 10 puntos, siendo el mínimo necesario para superar la prueba de 5 puntos.
+
+La puntuación es la siguiente:
+
+* Ejercicio 1: 3.5 puntos
+
+* Ejercicio 2: 3 puntos
+
+* Ejercicio 3: 3.5 puntos

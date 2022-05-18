@@ -1,0 +1,326 @@
+
+---
+title:    "Ejercicio práctico TCL"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  word_document:  default
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  pdf_document:   default
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+# 1. Planteamiento del problema
+
+Para realizar este ejercicio te pediré que cierres los ojos y traslades tu mente a los años 90, cuando los juegos de rol estaban de
+moda y era necesario quedar físicamente con los amigos para echar una quest a Dungeons & Dragons, ya que no existían videojuegos 
+todavía de este tipo.
+
+Imagínate que te encuentras con tu grupo de 6 amigos preparando la partida. Uno de tus amigos ejercerá el rol de master 
+(básicamente es la persona que construirá la aventura), y tu y otros 4 amigos jugaréis juntos la aventura. En nuestra partida 
+imaginaria el master es un experto en estadística y además de los retos del propio juego nos propondrá decisiones relacionadas con 
+la probabilidad relativa a los resultados que puedan salir de los dados.
+
+Lo primero que haremos para los retos que nos proponga el master es armarnos con las principales librerías de R que necesitaremos:
+
+```{r,warning=FALSE,message=FALSE}
+# Carga paquetes necesarios
+require(ggplot2)
+require(stringr)
+require(plyr)
+```
+
+## 1.1 Simulando un dado de 20 caras.
+
+Empieza el juego. Dado que no tenemos dados físicos, el master nos propone un primer reto. Crear una función que simule las tiradas
+de un dado de 20 caras perfecto y sin trucar. Es decir, que la probabilidad que salga un resultado u otro sea exactamente la misma.
+
+* **Ejercicio 1**: Crea una función llamada roll que simule los resultados de un dado de 20 caras sin trucar.
+
+```{r}
+# Crea la función aquí
+
+roll <- function(m, n){
+  set.seed(1234)
+  means <- plyr::ldply(1:m, function(x){
+    return(mean(sample(1:20, n, replace = TRUE)))
+  }) 
+}
+
+```
+
+## 1.2 Demuestra que el dado no está trucado
+
+Una vez tenemos nuestra función que simulará los resultados de un dado de 20 caras, el master nos pide que demostremos que la 
+probabilidad que salga un resultado u otro sea la misma.
+
+* **Ejercicio 2**: Realizar un experimento simulando 50.000 tiradas de 1 único dado. Los resultados deben mostrarse en un gráfico de barras, en el cuál:
+
+En el eje horizontal (x): valores posibles de cada tirada
+En el eje vertical (y): número de veces que ha salido el valor en porcentaje
+
+(Consejo: utiliza la visualización propuesta en la actividad guiada, quítale la linea roja que marca la media, y reescala los ejes de la x e y en la visualización para que se vea mejor)
+
+```{r}
+# Crea el gráfico aquí
+
+# Lanzamiento de 1 dado 50.000 veces
+
+n_ <- 1
+m_ <- 50000
+
+g<-ggplot(roll(m = m_, n = n_),
+            mapping = aes(x = V1)) +
+  labs(
+    subtitle = str_interp('Densidad de las medias del lanzamiento de ${n_} dados ${m_} veces'),
+    x = 'Resultado promedio de la tirada',
+    y = 'Veces que ha salido el valor (en %)'
+  ) +
+  geom_bar(aes(y = ..prop..), alpha = 0.4, fill = 'blue') +
+  scale_x_continuous(
+    breaks = 1:20,
+    lim =  c(0, 21)
+  ) +
+  lims(
+    y = c(0, 0.06)
+  )
+g
+
+```
+
+## 1.3 Empieza la aventura
+
+Una vez el master ha comprobado en el gráfico anterior que la probabilidad que salga un valor u otro es prácticamente la misma, 
+empieza la aventura. No tarda en aparecer el primer reto estadístico. 
+
+La situación es la siguiente:
+
+Los 5 jugadores se encuentran en una habitación llena de trampas y deben escapar de esta. A tal efecto, es necesario realizar una 
+tirada de salvación para ver si los jugadores se salvarán o no. Una tirada de salvación no es más que lanzar uno o más dados y 
+superar un determinado valor para no ser devorado por las trampas y pasar a mejor vida. El master de la partida propone dos 
+tipos de tirada de salvación, y los jugadores deben elegir entre una opción u otra.
+
+Escenario 1: Se lanza 1 dado de 20 caras 5000 veces. Si la suma de las puntuaciones de todos los dados suma más de 25.000 puntos los jugadores saldrán de la habitación llena de trampas. Dicho de otro modo, si el promedio por tirada es superior a 5, los 
+jugadores se salvarán.
+
+Escenario 2: Se lanzan 5 dados de 20 caras 5000 veces. Si la suma de las puntuaciones de todos los dados suma más de 125.000 
+puntos los jugadores saldrán de la habitación llena de trampas. Dicho de otro modo, si el promedio por tirada es superior a 5, los 
+jugadores se salvarán.
+
+* **Ejercicio 3**: Realiza un experimento simulando 5000 tiradas de 1 único dado de 20 caras. Los resultados deben mostrarse en un gráfico de barras igual que el de la Pregunta 2.
+
+```{r}
+# Crea el gráfico aquí
+
+# Lanzamiento de 1 dado 5000 veces
+n_ <- 1
+m_ <- 5000
+
+g<-ggplot(roll(m = m_, n = n_),
+            mapping = aes(x = V1)) +
+  labs(
+    subtitle = str_interp('Densidad de las medias del lanzamiento de ${n_} dados ${m_} veces'),
+    x = 'Resultado promedio de la tirada',
+    y = 'Veces que ha salido el valor (en %)'
+  ) +
+  geom_bar(aes(y = ..prop..), alpha = 0.4, fill = 'red') +
+  scale_x_continuous(
+    breaks = 1:20,
+    lim =  c(0, 21)
+  ) +
+  lims(
+    y = c(0, 0.06)
+  )
+g
+
+
+resultado <- (sum((roll(m = m_, n = n_) > 5))/m_*100)
+
+print(resultado)
+```
+
+* **Ejericio 4**: Realiza un experimento simulando 5000 tiradas de 5 dados de 20 caras. Los resultados deben mostrarse en un gráfico de
+barras igual que el de la Pregunta 2.
+
+```{r, warning = FALSE. message = FALSE}
+# Crea el gráfico aquí
+
+# Lanzamiento de 5 dados 5000 veces
+n_ <- 5
+m_ <- 5000
+
+g<-ggplot(roll(m = m_, n = n_),
+            mapping = aes(x = V1)) +
+  labs(
+    subtitle = str_interp('Densidad de las medias del lanzamiento de ${n_} dados ${m_} veces'),
+    x = 'Resultado promedio de la tirada',
+    y = 'Veces que ha salido el valor (en %)'
+  ) +
+  geom_bar(aes(y = ..prop..), alpha = 0.4, fill = 'green') +
+  scale_x_continuous(
+    breaks = 1:20,
+    lim =  c(0, 21)
+  ) +
+  lims(
+    y = c(0, 0.04)
+  )
+g
+
+resultado <- (sum((roll(m = m_, n = n_) > 5))/m_*100)
+print(resultado)
+```
+
+* **Ejericio 5**: Podrías indicar en cuál de los dos escenarios es más probable que superemos la tirada de salvación?
+
+```{r}
+print("En el segundo escenario, ya que la curva empieza a parecerse cada vez más a una Distribución Normal y se puede observar que las colas de la distribución empiezan a situarse entre los valores 5 y 16 (aproximadamente), convirtiéndolos en los valores más probables, además que la probabilidad de que el promedio por tirada sea superior a 5 es de 98.16%")
+
+```
+
+## 1.4 El Final Boss tramposo
+
+Nuestra aventura se acerca al final. Nuestro grupo de intrépidos aventureros ha superado habitaciones llenas de trampas y ha 
+derrotado a monstruos de todo tipo exitosamente. Una vez accedemos a la habitación final, aparece el Final Boss (el último jefe). 
+Pese a no ser un monstruo tan grande ni fuerte como el resto, este tiene una gran ventaja. Los dados con los que jugarás para 
+derrotarlo están trucados (a su favor).
+
+* **Ejercicio 6**: Crea una función llamada loaded_dice que simule los resultados de un dado de 20 caras trucado. La probabilidad de 
+ocurrencia para cada una de las caras es:
+
+P(1): 2/25
+P(2): 2/25
+P(3): 2/25
+P(4): 2/25
+P(5): 2/25
+Resto de probabilidades: 1/25
+
+```{r}
+# Crea la función aquí
+
+loaded_dice <- function(m, n){
+  set.seed(1234)
+  means <- plyr::ldply(1:m, function(x){
+    return(mean(sample(1:20, n, replace = TRUE,
+                       prob = c(rep(2/25, 5), rep(1/25, 15)))))
+  }) 
+}
+
+```
+
+Ahora que ya hemos creado la función que simula nuestro dado de 20 caras trucado, pasemos al combate final.
+
+La situación es la siguiente:
+
+Los 5 jugadores se encuentran en una habitación con el monstruo y deben derrotarlo. Para poder ganar el combate, el master de la 
+partida propone dos escenarios distintos, y los jugadores deben elegir entre una opción u otra.
+
+Escenario 1: Se lanza 1 dado trucado de 20 caras 5000 veces. Si la suma de las puntuaciones de todos los dados suma más de 75.000 puntos los jugadores vencerán. Dicho de otro modo, si el promedio por tirada es superior a 15, los jugadores derrotarán al Final Boss.
+
+Escenario 2: Se lanzan 5 dados trucado de 20 caras 5000 veces. Si la suma de las puntuaciones de todos los dados suma más de 375.000 puntos los jugadores vencerán. Dicho de otro modo, si el promedio por tirada es superior a 15, los jugadores derrotarán al 
+Final Boss.
+
+* **Ejercicio 7**: Realiza un experimento simulando 5000 tiradas de 1 único dado trucado de 20 caras. Los resultados deben mostrarse en un gráfico de barras igual que el de la Pregunta 2.
+
+```{r}
+# Crea el gráfico aquí
+
+# Lanzamiento de 1 dado 5000 veces
+
+n_ <- 1
+m_ <- 5000
+
+g<-ggplot(loaded_dice(m = m_, n = n_),
+            mapping = aes(x = V1)) +
+  labs(
+    subtitle = str_interp('Densidad de las medias del lanzamiento de ${n_} dados ${m_} veces'),
+    x = 'Resultado promedio de la tirada',
+    y = 'Veces que ha salido el valor (en %)'
+  ) +
+  geom_bar(aes(y = ..prop..), alpha = 0.4, fill = 'purple') +
+  scale_x_continuous(
+    breaks = 1:20,
+    lim =  c(0, 21)
+  ) +
+  lims(
+    y = c(0, 0.09)
+  )
+g
+
+resultado <- (sum((loaded_dice(m = m_, n = n_) > 15))/m_*100)
+print(resultado)
+
+```
+
+* **Ejericio 8**: Realiza un experimento simulando 5000 tiradas de 5 dados trucados de 20 caras. Los resultados deben mostrarse en un gráfico de barras igual que el de la Pregunta 2.
+
+```{r}
+# Crea el gráfico aquí
+
+# Lanzamiento de 5 dados 5000 veces
+
+n_ <- 5
+m_ <- 5000
+
+g<-ggplot(loaded_dice(m = m_, n = n_),
+            mapping = aes(x = V1)) +
+  labs(
+    subtitle = str_interp('Densidad de las medias del lanzamiento de ${n_} dados ${m_} veces'),
+    x = 'Resultado promedio de la tirada',
+    y = 'Veces que ha salido el valor (en %)'
+  ) +
+  geom_bar(aes(y = ..prop..), alpha = 0.4, fill = "cyan4") +
+  scale_x_continuous(
+    breaks = 1:20,
+    lim =  c(0, 21)
+  ) +
+  lims(
+    y = c(0, 0.04)
+  )
+g
+
+resultado <- (sum((loaded_dice(m = m_, n = n_) > 15))/m_*100)
+print(resultado)
+```
+
+* **Ejercicio 9**: Podrías indicar en cuál de los dos escenarios es más probable que ganemos al Final Boss?
+
+```{r}
+print("En el primer escenario, ya que se pide que la suma de las puntuaciones de todos los dados suma más de 75.000 puntos, lo que es igual a obtener un promedio por tirada superior a 15, con lo que se obtiene una cantidad de tiradas que sí reflejan que se obtuvo en promedio 15 en cada una de ella, ya que a nivel gráfico se puede observar que los rangos van de 1 a 20 y todos se mantienen muy similares entre sí, además el promedio por tirada es debe ser superior a 15 y la probabilidad de que esto suceda es de 19.76%, mientras que en el escenario 2, es de 1.5%.")
+
+```
+
+## 1.5 Puntuación del del ejercicio
+
+Este ejercicio se puntuará con 10 puntos, siendo el mínimo necesario para superar la prueba de 5 puntos. 
+La puntuación es la siguiente:
+
+* Ejercicio 1: 2 puntos
+
+* Ejercicio 2: 1 punto
+
+* Ejercicio 3: 0.5 puntos
+
+* Ejercicio 4: 0.5 puntos
+
+* Ejercicio 5: 1 punto
+
+* Ejercicio 6: 2.5 puntos
+
+* Ejercicio 7: 0.5 puntos
+
+* Ejercicio 8: 0.5 puntos
+
+* Ejercicio 9: 1.5 puntos

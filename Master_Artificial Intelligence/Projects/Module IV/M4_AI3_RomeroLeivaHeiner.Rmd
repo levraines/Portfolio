@@ -1,0 +1,219 @@
+
+---
+title:    "Ejercicio práctico Análisis Discriminante"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  word_document:  default
+  pdf_document:   default
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  html_document: 
+    code_folding: show
+    highlight: tango
+    theme: cosmo
+    toc: yes
+    toc_float: yes
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+# 1. Planteamiento del problema
+
+Para este ejercicio nos enfocaremos en un set de datos que representa la calidad de distintos tipos de tinto portugués. Dicha calidad comprende valores entre 3 y 8. En función de 11 atributos distintos que caracterizan cada tipo de vino debemos ser capaces de clasificar la calidad que tendrá dicho vino.
+
+El dataset y el diccionario de datos podrás encontrarlo en la carpeta data.
+
+Así pues, lo primero que haremos es cargar el dataset en R:
+
+```{r,warning=FALSE,message=FALSE}
+# IMPORTANTE: siempre que ejecuto el botón knit, los resultados cambian y por más que investigué y probé varias soluciones nada funcionó. Entonces si se ejecuta el knit, los resultados serán distintos y por ende mi análisis también. 
+
+# Carga paquetes necesarios
+require(MASS)
+require(caret)
+require(randomForest)
+require(e1071)
+require(dplyr)
+
+# Carga del dataset
+data <- read.csv("https://raw.githubusercontent.com/levraines/Portfolio/master/Master_Artificial%20Intelligence/Data/4.2_PCA_AF_ejercicio.csv", sep = ';')
+
+str(data)
+
+```
+
+## 1.1 Preparación del dataset.
+
+Tal y como podrás comprobar, el dataset tiene una dimensión de 1599 observaciones y 11 variables.
+
+* **Ejercicio 1**: Modifica la variable quality, de tal modo que si la calidad se encuentra en los valores 3 o 4, pasará a categorizarse como "pobre", si se encuentra en los valores 5 o 6 pasará a categorizarse como "aceptable" y si se encuentra en los valores 7 o 8, pasará a categorizarse como "bueno". Posteriormente transforma la variable quality a factor.
+
+```{r}
+# Modifico la variable quality
+
+data$quality <- ifelse(data$quality <= 4, "pobre",
+                        ifelse(data$quality <= 6, "aceptable", "bueno"))
+
+# Transformo la variable quality a factor
+
+data$quality <- factor(data$quality, levels = c("pobre", "aceptable", "bueno"))
+
+# Comprobando transformación
+str(data)
+
+```
+
+* **Ejercicio 2**: Crea un nuevo dataset que contenga todas las variables explicativas normalizadas en rango 0-1 y la etiqueta a predecir (denominada quality en el conjunto de datos inicial).
+
+```{r}
+# Normalizo las variables del dataset en rango 0-1
+maxs <- apply( data[,1:11], 2, max)
+mins <- apply( data[,1:11], 2, min)
+
+
+# Creo nuevo dataset con las variables normalizadas y la etiqueta a predecir
+dataset <- as.data.frame(scale(data[,1:11], center = mins, scale = maxs - mins))
+dataset <- cbind(dataset, "class" = data$quality)
+
+```
+
+* **Ejercicio 3**: Crea un subconjunto de entreno que represente el 70% del nuevo dataframe creado y un subconjunto de testing que represente el otro 30%.
+
+```{r}
+# Creo subconjunto de entreno (70% de las observaciones)
+index <- sample(1:nrow(dataset), round(nrow(dataset)*0.7), replace = FALSE)
+X_train <- dataset[index,]
+
+# Creo subconjunto de testing (30% de las observaciones)
+test <- dataset[-index,]
+
+```
+
+## 1.2 El LDA como predictor.
+
+* **Ejercicio 4**: Crea un modelo LDA y grafica las 2 nuevas dimensiones creadas en un gráfico en el que se puedan visualizar las 3 categorías de la etiqueta a predecir por colores.¿Consideras que el LDA ha segmentado adecuadamente las observaciones en función de la clase a predecir? Justifica tu respuesta.
+
+```{r}
+# Creo el objeto con el modelo LDA llamado model
+set.seed(1234)
+model <- lda(class ~ .,data = X_train)
+
+# Grafico las dos nuevas dimensiones creadas por el modelo LDA
+projected_data <- as.matrix(X_train[, 1:11] ) %*% model$scaling
+plot(projected_data, col = X_train[,12], pch = 12)
+
+```
+
+* **Ejercicio 5**: Crea un modelo utilizando el LDA como clasificador, aplica las predicciones al subconjunto de testing y calcula la matriz de confusión. ¿Consideras que el modelo está acertando adecuadamente las observaciones cuya clase es minoritaria?
+
+```{r}
+# Creo el modelo LDA
+set.seed(1234)
+model <- lda(class ~ .,data = X_train)
+
+# Calculo las predicciones del modelo sobre subconjunto de testing
+X_test <- test[, !(names(test) %in% c( "class"))]  
+model.results <- predict(model, X_test)
+
+# Creo la matriz de confusión
+t = table(model.results$class, test$class)
+print(confusionMatrix(t))
+
+```
+Análisis: se puede observar como la clase que es minoritaria es la clase, "pobre", se ve que de 4 observaciones que se utilizaron para testear pudo identificar correctamente 1 y se equivocó en 3, podemos decir que no es aceptable pero puede predecir en algunas de las situaciones (de forma muy pobre). 
+
+
+## 1.3 El LDA como reductor de dimensionalidad.
+
+Una vez aplicado el LDA como clasificador, procederemos a aplicarlo como reductor de dimensionalidad para utilizar posteriormente un clasificador distinto.
+
+* **Ejercicio 6**: Crea un nuevo dataset de entreno y otro de testing utilizando como variables explicativas las variables creadas por el modelo LDA que has creado anteriormente.
+
+```{r}
+# Creación del nuevo dataset de entreno
+new_X_train <- as.matrix(X_train[,1:11]) %*% model$scaling
+new_X_train <- as.data.frame(new_X_train)
+new_X_train$quality <- X_train$class
+head(new_X_train)
+
+# Creación del nuevo dataset de testing
+new_X_test <- as.matrix(X_test[,1:11]) %*% model$scaling
+new_X_test <- as.data.frame(new_X_test)
+head(new_X_test)
+
+```
+
+* **Ejercicio 7**: Entrena un nuevo modelo utilizando el algoritmo del Random Forest sobre el nuevo dataset de entreno que has creado y aplica las predicciones al nuevo dataset de testing que has creado. Posteriormente, extrae la matriz de confusión.¿Este modelo tiene mayor accuracy que el anterior?¿Este modelo acierta más o menos en las clases minoritarias que el modelo anterior?
+
+```{r}
+# Entreno el modelo con random forest
+set.seed(1234)
+modfit.rf <- randomForest(quality ~. , data=new_X_train)
+
+# Predicciones con random forest
+predictions.rf <- predict(modfit.rf, as.data.frame(new_X_test), type = "class")
+
+# Matriz de confusión
+t = table( predictions.rf, test$class)
+print(confusionMatrix(t))
+
+```
+Análisis: este nuevo modelo con Random Forest, tiene mayor accuracy que el de discriminante lineal, ya que este tiene un accuracy de 85% mientras que el de LDA tiene un accuracy de 83.12%. Por otro lado, este modelo no acierta en las clases minoritarias de forma correcta, ya que de 3 observaciones utilizadas en el testing pudo predecir correctamente solo 1. 
+
+
+* **Ejercicio 8**: Entrena un nuevo modelo utilizando el algoritmo del Random Forest sobre el dataset de entreno inicial que has utilizado para el modelo del LDA como clasificador y aplica las predicciones al dataset de testing que utilizaste para el modelo del LDA como clasificador.¿Este modelo tiene mayor accuracy que los anteriores?¿Este modelo acierta más o menos en las clases minoritarias que los modelos anteriores?
+
+```{r}
+# Entreno el modelo con random forest
+set.seed(1234)
+modfit.rf <- randomForest(class ~. , data=X_train)
+
+# Predicciones con random forest
+X_test <- test[, !(names(test) %in% c( "class"))]  
+predictions.rf <- predict(modfit.rf, as.data.frame(X_test), type = "class")
+
+# Matriz de confusión
+t = table(predictions.rf, test$class)
+print(confusionMatrix(t))
+
+```
+Análisis: este nuevo modelo sí tiene mayor accuracy que los anteriores, ya que tiene 87.08% pero es que hay algo que tenemos que tomar en cuenta y es el hecho de no dejarnos engañar solamente por la métrica del accuracy, porque esta solo toma en cuenta las predicciones globales, es decir, de las clases mayoritarias. Por otro lado, el modelo no tomó ninguna observación para hacer el testing de la clase minoritaria por lo tanto, no se sabe cómo fue su rendimiento ante las clases minoritarias. 
+
+
+* **Ejercicio 9**: Si tuvieras que presentar uno de estos 3 modelos, cuál elegirías? Justifica tu respuesta.
+
+```{r}
+# Escribe tu respuesta
+print("Todo depende del contexto. Si yo tuviese que elegir el modelo que en términos generales se comporta mejor yo eligiría el Random Forest con LDA, porque es el tiene un balance un poco más decente en aciertos, incluso en las clases minoritarias, pero con ello, estaría penalizando los resultados de otras clases.
+      Ahora bien si a mí por ejemplo no me interesa que mi modelo detecte las clases minoritarias, sino que para mí es muy importante que mi modelo prediga correctamente las clases mayoritarias (los vinos 'aceptables'), yo eligiría el último modelo con random forest. He ahí porque no hay una respuesta definitivamente, ya que todo va a depender de lo que necesito o qué quiero predecir. Es importante en este caso utilizar algún método de balanceo como el SMOTE para poder balancear las clases y que el modelo pueda dar mejores predicciones que las que aquí aparecen.")
+
+```
+
+## 1.4 Puntuación del del ejercicio
+
+Este ejercicio se puntuará con 10 puntos, siendo el mínimo necesario para superar la prueba de 5 puntos. 
+La puntuación es la siguiente:
+
+* Ejercicio 1: 1 punto
+
+* Ejercicio 2: 1 punto
+
+* Ejercicio 3: 1 punto
+
+* Ejercicio 4: 1.5 puntos
+
+* Ejercicio 5: 1.5 puntos
+
+* Ejercicio 6: 1 punto
+
+* Ejercicio 7: 1.5 puntos
+
+* Ejercicio 8: 1 punto
+
+* Ejercicio 9: 0.5 puntos
