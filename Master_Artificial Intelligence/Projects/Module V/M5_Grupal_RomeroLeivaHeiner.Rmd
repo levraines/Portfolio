@@ -1,0 +1,267 @@
+---
+title: 'MÓDULO 5: Técnicas Avanzadas de Predicción'
+author: "Heiner Romero Leiva"
+date: "24/05/2022"
+output:
+  pdf_document:
+subtitle: 'MODELO LINEAL GENERALIZADOS. INFERENCIA'
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path="www/")
+library(knitr)
+library(pander)
+library(kableExtra)
+library(stringr)
+library(rgeos)
+library(data.table)
+library(osmdata)
+library(maptools)
+library(leaflet)
+library(sp)
+library(dplyr)
+library(geosphere)
+library(pander)
+library(ggcorrplot)
+library(ggplot2)
+library(lmtest) 
+library(fBasics) 
+library(MASS)
+library(earth)
+library(fitdistrplus)
+library(mfx)
+library(pROC)
+library(glmnet)
+library(spdep)
+library(spgwr)
+library(astsa)
+library(forecast)
+library(car)
+library(pls)
+library(MPV) 
+library(tidyverse)
+library(osmdata)
+library(sf)
+library(ggmap)
+library(spatialreg)
+library(gamlss)
+library(marginaleffects)
+suppressPackageStartupMessages(library(tidyverse))
+panderOptions('table.split.table', Inf)
+panderOptions('decimal.mark', ",")
+panderOptions('big.mark', ".")
+panderOptions('missing', "")
+options(knitr.kable.NA = '')
+```
+
+
+
+# EJERCICIO 1
+
+¿Cuáles son las variables que definen la probabilidad de ser o no infiel? 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Cargando datos
+
+data = read.csv("https://raw.githubusercontent.com/levraines/Portfolio/master/Master_Artificial%20Intelligence/Data/affairs.csv", header = T, stringsAsFactors=T)
+
+# Inspeccionando datos
+str(data)
+
+# Quitando primera variable y convirtiendo variable naffairs a numerica
+df_1 <- data[,2:19]
+df_1$naffairs <- as.factor(df_1$naffairs)
+
+dataset <- data.frame(df_1)
+df <- data.frame(df_1)
+
+# Cambiando tipo de variables a factores
+df$kids <- as.factor(df$kids)
+df$vryunhap<-as.factor(df$vryunhap)
+df$unhap<-as.factor(df$unhap)
+df$avgmarr <-as.factor(df$avgmarr)
+df$hapavg <-as.factor(df$hapavg)
+df$vryhap <-as.factor(df$vryhap)
+df$antirel <-as.factor(df$antirel)
+df$notrel <-as.factor(df$notrel)
+df$slghtrel <-as.factor(df$slghtrel)
+df$smerel <-as.factor(df$smerel)
+df$vryrel <-as.factor(df$vryrel)
+df$yrsmarr1 <-as.factor(df$yrsmarr1)
+df$yrsmarr2 <-as.factor(df$yrsmarr2)
+df$yrsmarr3 <-as.factor(df$yrsmarr3)
+df$yrsmarr4 <-as.factor(df$yrsmarr4)
+df$yrsmarr5 <-as.factor(df$yrsmarr5)
+df$yrsmarr6 <-as.factor(df$yrsmarr6)
+df$naffairs <- as.factor(df$naffairs)
+
+# Creando modelo GLM convirtiendo a factores las variables
+modelo_1 <- glm(naffairs ~., data = df, family = binomial(link = "logit"))
+
+# Imprimiendo resultados del modelo
+summary(modelo_1)
+
+```
+
+Análisis: para este caso en específico, necesitamos ver las variables que definen la probabilidad de que una persona sea o no infiel, entonces tenemos que las variables que son significativas (es decir, cuyo $p < 0.05$ son: vryunhap, unhap, avgmarr, antirel, slghtrel. Si nos ponemos a ver de las 19 variables con las que contamos en el modelo original, solo 5 son las que definen la probabilidad de que una persona sea o no infiel. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Creando nuevo modelo con solo las variables significativas
+modelo_completo <- glm(naffairs ~ vryunhap + unhap + avgmarr +  antirel + slghtrel, data = df, family = binomial(link = "logit"))
+
+# Imprimiendo resultados del modelo
+summary(modelo_completo)
+
+```   
+Análisis: si se seleccionan solo las 5 variables significativas se puede ver que en este mismo modelo, todas lo siguen siendo, ahora bien, notamos que para este segundo modelo con menos variables tiene un AIC de 637.18, mientras que el modelo que hicimos al inicio con todas las variables tenía un AIC de 632.21, como es tan poco el valor que mejora teniendo todas las variables versus solo teniendo 5, nos podemos quedar con el segundo modelo, ya que utiliza menos variables y es levememente menos eficiente. 
+
+Algo interesante de las variables seleccionadas es que al parecer si las personas tienen un matrimonio muy infeliz, o un matrimonio no feliz, un matrimonio promedio, si es antireligiosa y levemente religiosa hay más probabilidades de que la persona cometa infidelidad, ya que es más esperable y las variables tienen sentido. Si una persona no se siente feliz con el matrimonio y sumado al hecho de que no sea religiosa es más probable que cometa una infidelidad. 
+
+## EJERCICIO 2
+
+Realizad un modelo de conteos de infidelidades. ¿Son las mismas variables las que afectan respecto al modelo anterior? 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Creando modelo de Poisson
+df$naffairs <- as.numeric(df$naffairs)
+
+modelo_2 <- glm(naffairs ~., data=df, family=poisson(link = "log"))
+
+# Tabla de resumen
+summary(modelo_2)
+
+```   
+
+Análisis: si comparamos este modelo con el modelo optimizado anterior, vemos que las nuevas variables que son significativas ($p < 0.05$) son: vryunhap, unhap, avgmarr, hapavg, antirel, notrel, slghtrel, slghtrel, yrsmarr1, yrsmarr2, yrsmarr3, es decir, pasamos de tener solo 5 variables a tener 11 variables y el modelo ya incluye variables como la cantidad de años casados y aquellas que tienen que ver con la religión. 
+
+Hastas cierto punto vemos que el AIC del modelo poisson es mayor, 1924.5, es decir es más deficiente que los otros modelos realizados con la particularidad de que los otros eran binomiales y este es poisson, para comprobar si este es peor, tendríamos que compararlo con otro modelo que es similar a este. 
+
+## EJERCICIO 3.
+
+Argumentad la razón por la que no podemos incluir todas las variables yrsmarr dentro del modelo. 
+
+Análisis: la razón es sencilla y se debe a la trampa de la dicotómica, ya que si tenemos 2 categorías que se convierten en binarias (como es el caso de las variables years) no se pueden incluir ambas si tenemos el Intercept, puesto que habría una correlación perfecta y esto haría que si incluimos todas los errores serían redundantes, de ahí la importancia de solo incluir una de esas o dos para evitar que el error se reproduzca en nuestro modelo.    
+
+## EJERCICIO 4.
+
+Calculad la frecuencia de infidelidades de una persona con más de 10 años de matrimonio, no-religioso, sin hijos. Sin saber el grado de satisfacción con el matrimonio. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+#Añadimos el valor esperado
+df$fittedvalue <- predictions(modelo_2)$predicted
+
+#Filtramos por lo solicitado por el ejercicio
+
+df %>% 
+  dplyr::filter(yrsmarr5==1 | yrsmarr6==1, notrel==1,kids==0) %>% 
+  summarise(Valor_esperado = mean(fittedvalue))
+
+```
+
+Análisis: en este caso para poder responder esta pregunta, se opta por utilizar el modelo 2 que es el poisson ya que esta pregunta nos pide la frecuencia de infidelidades para una persona con más de 10 años de matrimonio, no religiosa, y sin hijos y no tenemos ninguna idea del grado de satisfacción con el matrimonio. El resultado que obtenemos es de 2.66, es decir, la frecuencia de infelidades de una persona con etas características es de 2.66 veces. En este se desconoce si 2.66 corresponde a una ocurrencia anual, mensual, semanal, etc., ya que no tenemos dicha información. 
+
+
+## EJERCICIO 5
+
+¿Podríais calcular el 95% de confianza de la estimación anterior? 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+# Añadimos la intervalo inferior
+df$lowbound <- predictions(modelo_2, newdata = df, conf_level = 0.95)$conf.low
+# Añadimos la intervalo superior
+df$highbound<- predictions(modelo_2, newdata = df, conf_level = 0.95)$conf.high
+
+df %>% dplyr::filter(yrsmarr5==1 | yrsmarr6==1, notrel==1,kids==0) %>% 
+  summarise(Intervalo_inf =mean(lowbound), Valor_esperado = mean(fittedvalue), Intervalo_sup = mean(highbound))
+
+```
+
+Análisis: en este caso podemos observar como el intervalo de confianza menor es de 2.03, mientras que ek superior es de 3.49. En este caso nuestra predicción es de 2.66 veces, no conocemos la ocurrencia del suceso, pero podemos observar que dicha predicción se encuentra cerca de los límites de confianza por ende, podemos decir que es una predicción robusta o que sí cumple con los criterios mínimos de especificidad.  
+
+
+## EJERCICIO 6
+
+Calculad, bajo qué nivel de confianza, los residuos de la distribución pueden considerarse normales. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Creando la configuracion del grafico
+layout(matrix(c(1,2), 1, 2, byrow = T))
+
+# Creando el histograma
+hist(modelo_2$residuals, main = "Histograma de residuos", ylab = "Residuos")
+
+# Creando qqnorm
+qqnorm(modelo_2$residuals)
+qqline(modelo_2$residuals)
+
+# Creando test de Jarque Bera
+jarqueberaTest(modelo_2$residuals)
+
+```
+
+Análisis: podemos observar que el histograma de residuos, así como el QQ-Norm muestran que los residuos son altamente no normales, esto se procedió a constrastarlo con el test de Jarque Bera y de igual forma podemos observar que el valor es altamente significativo $p < 0.05$ por lo que, contamos con residuos altamente no gaussianos y por ende tenderán a una mala predicción en la mayoría de los casos.  
+
+## EJERCICIO 7
+
+Calculad si la combinación de Años de Matrimonio e Hijos da nueva información a nuestro modelo. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+df$kids <- as.numeric(df$kids)
+
+datanew <- df %>% 
+  mutate(marr_kids = (case_when(
+    yrsmarr1 == 1 ~ 0.75,
+    yrsmarr2 == 1 ~ 1.5,
+    yrsmarr3 == 1 ~ 4,
+    yrsmarr4 == 1 ~ 7,
+    yrsmarr5 == 1 ~ 10,
+    yrsmarr6 == 1 ~ 15)*kids))
+
+modelo_3 <- glm(naffairs ~., data = datanew, family = poisson(link = "log"))
+
+# Imprimiendo resultados del modelo
+summary(modelo_3)
+```
+
+Análisis: si comparamos este último modelo que acabamos de hacer con el modelo 2, se puede apreciar que tenemos un AIC de 1924.1 y es exactamente el mismo AIC que obtenemos en el modelo 2, sin embargo pasamos de tener 11 variables significativas en el modelo 2 a no tener ni una sola variable significativa en este. Si verificamos los residuos del modelo 2 (el anterior) obtenemos una devianza residual de 505.56 mientras que en en este modelo 3 obtenemos una devianza residual de 497.15, es decir, ligeramente más pequeña pero sin nunguna variable significativa, por ende no contamos con un modelo optimizado o en el que hayan variables con más poder predictivo que otras o que añadan más informacion al fin de cuentas. 
+
+## EJERCICIO 8
+
+Teniendo la combinación de Años de Matrimonio e Hijos metido en el modelo, ¿cuál sería el cambio en infidelidades de no tener hijos a tener hijos? 
+
+El cambio en infidelidades al pasar de no tener hijos, a tener uno o más, sería de $0.119903$ la que surge de realizar la resta de los coeficientes de la variable ***kids***= $0.127715$ menos el coeficiente de la nueva variable definida ***marr_kids*** = $-0.007812$. Es decir el cambio unitario en infidelidades va a ser igual al cambio unitario que se tiene al tener o no tener hijos. 
+
+Análisis: 
+
+## EJERCICIO 9
+
+Calculad una variable que convierta las dummies de años de matrimonio en numérica. Calculad también esta misma variable al cuadrado. ¿En teoría hay alguna edad de matrimonio en la que cada año adicional suponga un descenso de las infidelidades?
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+
+df$kids <- as.numeric(df$kids)
+
+datanew <- df %>% 
+  mutate(marr_sq = (case_when(
+    yrsmarr1 == 1 ~ 0.75,
+    yrsmarr2 == 1 ~ 1.5,
+    yrsmarr3 == 1 ~ 4,
+    yrsmarr4 == 1 ~ 7,
+    yrsmarr5 == 1 ~ 10,
+    yrsmarr6 == 1 ~ 15)**2))
+
+modelo_4 <- glm(naffairs ~., data = datanew, family = poisson(link = "log"))
+
+# Imprimiendo resultados del modelo
+summary(modelo_4)
+
+```
+
+Análisis: si comparamos este modelo 4 que acabamos de hacer con el modelo 2 y 3, se puede apreciar que tenemos un AIC de 1922.2, mientras que en el modelo 2 obtuvimos un AIC de 1924.5 y en el modelo 3 un AIC de 1924.1, es decir, con el cambio que hicimos añadiendo la nueva variable y elevándola al cuadrado obtuvimos una mejora levemente significativa de casi 2 puntos en el AIC. Por otro lado, al igual que en el modelo 3 las variables pasan a no ser significativas pero la devianza residual es de 497.25, es decir más baja en el modelo 2 pero levemente por encima del modelo 3. 
+
+Por último podemos observar como la introducción de esta variable al modelo este la toma como NA, es decir, que no converge; pero apreciando cada uno de los años con el modelo 3, podemos observar como a partir del primer año juntos se observa una leve disminución de las infidelidades ya que se observa que los valores en el modelo 3 y 4, después del año empiezan a disminuir teoricamente, pero podemos observar como en el año 2 y 5, esto más bien crece por lo que podemos mencionar que en el año segundo y en el quinto las infidelidades pueden aparecer pero se ve una disminución en el resto de los mismos. 
+

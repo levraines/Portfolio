@@ -1,0 +1,214 @@
+---
+title: 'MÓDULO 5: Técnicas Avanzadas de Predicción'
+author: "Heiner Romero Leiva"
+date: "04/05/2022"
+output:
+  word_document:
+subtitle: 'MODELO LINEAL GAUSSIANO. ELEMENTOS BÁSICOS'
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path="www/")
+library(knitr)
+library(pander)
+library(kableExtra)
+library(stringr)
+suppressPackageStartupMessages(library(tidyverse))
+panderOptions('table.split.table', Inf)
+panderOptions('decimal.mark', ",")
+panderOptions('big.mark', ".")
+panderOptions('missing', "")
+options(knitr.kable.NA = '')
+```
+
+# EJERCICIO 1
+
+Propón la regresión para explicar el salario a través de los años de servicio y los años desde el doctorado. Justifica si era lo esperado o no y si difiere justificar la razón de dicho diferimiento. Obtén la suma de residuos al cuadrado, el coeficiente de determinación y el coeficiente de determinación corregido del modelo. 
+
+```{r}
+
+# Cargando datos
+data("Salaries", package="carData")
+
+# Mostrando Dataframe 
+head(Salaries)
+
+# Inspeccionando si el DF tiene valores nulos o inconsistencias
+summary(Salaries)
+
+# Mostrando descripción del DF para ver si hay inconsistencias
+str(Salaries)
+
+# Creando modelo lineal
+formula<-as.formula('salary ~ yrs.service + yrs.since.phd')
+
+# Utilizando lm
+modelo_1<- lm(formula = formula, data =Salaries)
+pander(summary(modelo_1))
+
+# suma de residuos al cuadrado
+sum(resid(modelo_1)^2)
+
+```
+Análisis: 
+
+No es lo que se esperaba para el beta de la variable años de servicio, ya que cuenta con un signo negativo; es decir, es común pensar que un empleado mientras más años de servicio lleva en una empresa más salario tendrá (ceteris paribus). 
+
+En cuanto a la variable años desde el PhD,  esta está en concordancia con lo esperado, ya que tiene una relación "directa" con respecto a la variable salario (salary).
+
+En cuanto al modelo lineal se espera que este ajuste bien con el conjunto de datos de entrenamiento, en este caso contamos con un error residual estándar de 27.35, una suma de residuos al cuadrado ridículamente enorme, y en este caso entre más cercano de 0 mejor la regresión, lo cual no sucede. Por otro lado el R2 es de apenas 18.83%, quiere decir que el modelo explica en un 18.83% la variable real (salary). 
+
+Por otro lado se tiene el R2 ajustado que para este modelo es de 18.42%, conforme se agregan variables se espera que este vaya aumentando ya que las variables de cierta forma explicarían mejor el modelo, pero ninguna de las variables lo explica bien.  
+
+Además todos los "p-value" son menores a $0.05$ (se asume que se trabaja con este valor de significancia), eso significa es poco pobrable que  nuestra hipótesis nula $H_0: \beta_i=0$ sea verdadera, en este caso rechazamos la hipótesis nula y aceptamos la hipótesis alternativa $H_{1}: \beta_i \neq 0$, por ende concluimos que  hay evidencias de que hay una relación lineal entre las variables y el modelo.
+
+Por último, el estadístico $F$ también es significativo.
+
+## EJERCICIO 2
+
+Incluye el género en el modelo. Valora la nueva suma de residuos al cuadrado. 
+
+```{r, warning=FALSE}
+# Creando modelo lineal
+formula<-as.formula('salary ~ yrs.service + yrs.since.phd + sex')
+
+# Utilizando lm
+modelo_2<- lm(formula = formula, data =Salaries)
+pander(summary(modelo_2))
+
+# suma de residuos al cuadrado
+sum(resid(modelo_2)^2) 
+
+```
+Análisis: la nueva suma de residuos al cuadrado ahora genera un valor similarmente grande que el anterior, por lo que, la inclusión de esta nueva variable tampoco ha sido una buena elección y no se considera que sea una variable a considerar para mejorar el modelo y predecir el salario. 
+
+
+
+## EJERCICIO 3.
+
+Justifica, a través del coeficiente de determinación corregido, si el género es una variable a tener en cuenta para mejorar el modelo de predicción del salario.
+
+```{r}
+# Solución:
+pander(summary(modelo_2))
+
+```
+
+Análisis: definitivamente no lo es, ya que el coeficiente de determinación corregido sólo aumentó pero muy poco y en este caso el R2 ajustado siempre aumenta cuando se agrega un predictor al modelo, incluso cuando no haya una mejora real en el modelo.
+
+
+## EJERCICIO 4.
+
+Indica cómo incrementa el salario ante una variación en los años de servicio. 
+
+```{r}
+# Solución:
+pander(summary(modelo_1))
+
+```
+
+Análisis: En este caso la variable años de servicio es negativa por lo tanto esta disminuye la variable respuesta (salario), entonces una disminución en la variable años de servicio es -649.8 veces la disminución en y (salario). 
+
+Consultando el material entregado por el profesor se puede establecer que como no hay ningún reescalamiento de ninguna variable, una variación a ambos miembros de la ecuación no afecta a los coeficientes betas y lo anterior se puede visualizar así. 
+$$
+\begin{aligned}
+ \Delta Y &= \Delta X \beta
+\end{aligned}
+$$
+
+## EJERCICIO 5
+
+Indica cómo afecta a las betas del modelo si dividimos el salario por mil para expresarlo en miles. 
+
+```{r}
+# Creando modelo lineal
+formula<-as.formula('(salary/1000) ~ yrs.service + yrs.since.phd')
+
+# Utilizando lm
+modelo_3<- lm(formula = formula, data =Salaries)
+pander(summary(modelo_3))
+```
+
+Análisis: en este caso si reescalamos la variable endógena entre mil (dividir por mil), los betas de las variables exógenas son escaladas entre mil. Se puede corroborar presentando los incerceptos del modelo 1 (sin aplicar ninguna escala) con comparación con el modelo 3 escalado entre mil.
+
+
+```{r, warning=FALSE}
+#coeficientes del nuevo modelo reescalado
+pander(modelo_3$coefficients)
+
+#coeficientes del modelo 1
+pander(modelo_1$coefficients)
+```
+
+## EJERCICIO 6
+
+Con el modelo anterior, teniendo en cuenta años de servicio y años desde el doctorado, realiza el mismo modelo, pero con el logaritmo neperiano del salario. Indica si se mantienen los signos de las betas obtenidas. 
+
+```{r, warning=FALSE}
+# Solución:
+# Creando modelo lineal
+formula<-as.formula('log(salary) ~ yrs.service + yrs.since.phd')
+
+# Utilizando lm
+modelo_4<- lm(formula = formula, data =Salaries)
+pander(summary(modelo_4))
+
+```
+
+Análisis: ambos signos se mantienen igual, negativo para los años de servicio y positivo para los años desde el PhD. 
+
+## EJERCICIO 7
+
+Indica cómo incrementa el salario ante una variación, en los años de servicio en este nuevo modelo. 
+
+
+```{r}
+# Solución:
+pander(summary(modelo_4)) 
+```
+
+Análisis: En este caso la beta de la variable años de servicio es negativa por lo tanto esta disminuye porcentualmente la variable respuesta (salario) o dicho de otra forma el cambio porcentual esperado en y cuando x disminuye en una unidad. 
+
+A nivel matemático se ve de la siguiente manera:
+
+$$
+\begin{aligned}
+ \Delta Y\%=100\beta \Delta X
+\end{aligned}
+$$
+
+
+## EJERCICIO 8
+
+Utilizando un modelo de regresión lineal (lm), realiza una modelización correcta del salario (utilizando las variables que desees de la base de datos) y presenta los resultados argumentando, desde tu conocimiento, las razones por las que eliges dicho modelo.
+
+```{r}
+# Utilizando backward para seleccionar mejores variables:
+formula<-as.formula('salary ~ rank + discipline + yrs.service + yrs.since.phd + sex')
+library("MASS")
+
+formula_completa<-as.formula('salary ~ rank + discipline + yrs.service + yrs.since.phd + sex')
+
+modelo_completo<-lm(formula =formula_completa, data = Salaries)
+
+backward<-stepAIC(modelo_completo,trace=FALSE,direction="backward")
+backward$anova
+
+# El modelo descartó la variable sex
+# Creando modelo nuevo con todas las variables excepto variable "sex"
+
+formula <-as.formula('salary ~ rank + discipline + yrs.service + yrs.since.phd')
+
+modelo_final<- lm(formula = formula, data =Salaries)
+pander(summary(modelo_final))
+
+```
+
+Análisis: 
+
+En este caso se opta por utilizar un método de selección de variables de tipo backward, así podemos observar que para el modelo la variable de género no es importante y de hecho, no la considera en el modelo final. 
+
+Con las variables utilizadas para este modelo, podemos ver que muchas de ellas tienen sentido con el salario del profesional, ya que por ejemplo: rank, discipline, yrs.service, yrs.since.phd son variables que de cierta forma explican el modelo, ya que no es lo mismo que un profesor sea asistente que uno asociado, las disciplinas también van a cambiar y depende la disciplina va a ser mejor pagado el profesor, también tiene que ver los años de servicio y hace cuanto terminó el PhD. 
+
+P.d.: para este modelo no se complen varios supuestos que se necesitan para que una regresión lineal sea robusta como la homocedasticidad ver el criterio de multicolinealidad, etc. 
+

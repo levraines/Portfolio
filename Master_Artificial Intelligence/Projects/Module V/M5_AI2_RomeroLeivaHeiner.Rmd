@@ -1,0 +1,209 @@
+---
+title: 'MÓDULO 5: Técnicas Avanzadas de Predicción'
+author: "Heiner Romero Leiva"
+date: "11/05/2022"
+output:
+  pdf_document:
+subtitle: 'MODELOS LINEALES GENERALIZADOS'
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path="www/")
+library(knitr)
+library(pander)
+library(kableExtra)
+library(stringr)
+suppressPackageStartupMessages(library(tidyverse))
+panderOptions('table.split.table', Inf)
+panderOptions('decimal.mark', ",")
+panderOptions('big.mark', ".")
+panderOptions('missing', "")
+options(knitr.kable.NA = '')
+```
+
+# EJERCICIO 1
+
+Propón un modelo lineal logit en el que la variable respuesta (crédito bueno=0, crédito malo=1), lo expliquen el resto de variables. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Cargando datos
+german_credit <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data")
+
+# Nombrando columnas
+colnames(german_credit) <- c("chk_acct", "duration", "credit_his", "purpose", "amount", "saving_acct", "present_emp", "installment_rate", "sex", "other_debtor", "present_resid", "property", "age", "other_install", "housing", "n_credits", "job", "n_people", "telephone", "foreign", "response")
+
+# Restando un uno al vector para convertirlo en 1 y 0
+german_credit$response <- german_credit$response-1
+
+# Convirtiendo la columna a factor
+german_credit$response <- as.factor(german_credit$response)
+
+# Inspeccionando si el DF tiene valores nulos o inconsistencias
+summary(german_credit)
+
+# Mostrando descripción del DF para ver si hay inconsistencias
+str(german_credit)
+
+# Modelo Lineal logit
+modelo_1 <- glm(response ~., 
+                data = german_credit, 
+                family = binomial(link = "logit"))
+
+# Imprimiendo resultados del modelo
+summary(modelo_1)
+
+# Consultando la devianza 
+modelo_1$deviance
+
+# Consultando el AUC
+library(pROC)
+
+auc <- auc(german_credit$response, 
+           predict(modelo_1, german_credit, type = "response"))
+
+print(auc)
+
+german_credit$sex_dicotomico <- ifelse(german_credit$sex == "A92", 0, 1)
+```
+
+Análisis: se puede observar como obtenemos un devianza residual de 895.8, en este caso para nuestro análisis entre más cercana a 0 mejor ya que en este caso nuestro modelo predecería muy bien, sin embargo para este modelo no podemos afirmar que es buena, ya que tendríamos que comparar la devianza con otro modelo para aclarar si es aceptable, sin duda alguna no está tan cerco de 0 como desearíamos. Por otro lado obtenemos un AIC de 993.81, al igual que la devianza entre más cercano a 0 mejor pero este estadístico no tiene mucho sentido si no tenemos otro modelo con el cual poder hacer la comparación. 
+
+Con este primer modelo podemos observar como algunos "p-value" son menores a $0.05$ (se asume que se trabaja con este valor de significancia) en específico: chk_acctA13, chk_acctA14, duration, credit_hisA34, purposeA41, purposeA42, purposeA43, purposeA49, amount, saving_acctA64, saving_acctA65, installment_rate, sexA93, other_debtorA103, other_installA143 y foreignA202 eso significa que es poco pobrable que  nuestra hipótesis nula $H_0: \beta_i=0$ sea verdadera, en este caso rechazamos la hipótesis nula y aceptamos la hipótesis alternativa $H_{1}: \beta_i \neq 0$ en resumen todas estas variables que se acaban de mencionar tienen una aportación significativa al modelo. 
+
+Por último se obtiene un área bajo de la curva de 0.83, en este caso entre más cercana a 1 mejor, sin embargo hay que tener cuidado con este valor, ya que este dataset presenta clases desbalanceadas, ya que tenemos una cantidad de créditos buenos de 310 observaciones y créditos malos de 690, es decir, más del doble. Obtenemos en este caso un AUC alto, porque se le está dando más preponderancia a la predicción de los créditos malos, de ahí la importancia de siempre obtener la especificidad y la sensibilidad y no solo quedarnos con el AUC. 
+
+
+## EJERCICIO 2
+
+Interpreta la variable duration. ¿Es significativa? ¿A partir de qué nivel de significación deja de ser significativa? 
+
+Análisis: 
+
+La variable duration (duración) para el modelo que construimos sí es significativa, ya que el "p-value" es menor a $0.05$ (se asume que se trabaja con este valor de significancia) esto significa que es poco pobrable que  nuestra hipótesis nula $H_0: \beta_i=0$ sea verdadera, en este caso rechazamos la hipótesis nula y aceptamos la hipótesis alternativa $H_{1}: \beta_i \neq 0$. Es decir, esta variable tiene una aportación significativa al modelo. 
+
+
+Finalmente para que nuestra variable no fuera significativa, el "p-value" tendría que ser mayor a $0.05$ (en algunos casos se puede trabajar con valores de significancia de 0.01 y eso va a depender el criterio del analista).
+
+
+## EJERCICIO 3.
+
+Si eliminamos la variable amount del modelo, ¿crees que alguna otra variable incrementaría el sesgo provocado por la falta de amount en el modelo? Es decir, identifica el sesgo en otra variable producido por eliminar la variable amount. 
+
+```{r, warning=FALSE}
+# Modelo Lineal logit - quitando variable amount
+modelo_2 <- glm(response ~ chk_acct + duration +  credit_his + purpose + saving_acct +  present_emp + installment_rate + sex + other_debtor + present_resid + property + age + other_install + housing  + n_credits + job + n_people + telephone + foreign, data = german_credit, family = binomial(link = "logit"))
+
+summary(modelo_2)
+```
+
+Análisis: sí sucede, en realidad pude idenficar una variable en la cual incluso hay un cambio de signo en cuanto al beta (hay una afectación directa) y esta fue la variable "present_resid" (esta variable lo que quiere decir es desde cuando la persona tiene la residencia) ya que en el modelo 1, esta tenía una beta de 0.004776 y para el segundo modelo eliminando la variable amount, esta misma variable ahora cuenta con una beta de -0.002927, por lo que se puede mencionar que el error esta correlacionado con la eliminación de la variable en cuestión.
+
+En este caso hay afectación a nivel del modelo cuando eliminamos el monto del crédito, entonces lo que sucede es que dicha variable pasa algo de su error a la variable present_resid, se puede entender entonces que a ausencia del monto del crédito, el modelo va a penalizar más desde cuándo la persona tiene la residencia. 
+
+Por otro lado, se identificó otra como es credit_hisA31 (esta significa que los créditos al banco han sido pagados en la fecha estipulada), sin embargo en esta quizá no sea tan notorio como en la se acaba de mencionar, ya que se ve que sí hay alguna correlación en que la persona no pague el crédito en las fechas acordadas para la otorgación de crédito y el hecho de que no tengamos un monto para el crédito, ya que es algo quizá lógico que yo le voy a dar un crédito a alguien que me pague puntual y si no tengo un monto yo voy a exigir mínimo un histórico de pago para ver si la persona honra sus obligaciones. 
+
+Finalmente, si eliminamos la variable amount del modelo obtenemos un AIC de más de 1000, lo cual lo convierte en un modelo ligeramente más malo que en el primero con todas las variables. Al quitar la variable amount se penaliza su error en otra variable y esto aumenta su incapacidad para predecir. 
+
+## EJERCICIO 4.
+
+Identifica efectos no lineales en la variable duration y amount. Interpreta los nuevos resultados después de meter, en el modelo, estas no linealidades. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+library(earth)
+
+# Utilizando paquete Earth con todas las variables
+modelo_3 <- earth(response ~., data = german_credit, glm = list(family = binomial(link = "logit")))
+
+summary(modelo_3)
+```
+
+Análisis: con las variables duration y amount sí se detectan efectos no lineales, es decir sí se detectan puntos de corte donde la beta cambia para una misma variable y por lo tanto que estas sean significativas para poder usarse dentro del modelo y que puedan explicarlo de mejor forma (ya que sí hay cambios de tendencia).   
+
+Realicé este proceso usando todas las variables y en cuanto a la variable amount tengo 3 puntos de corte, uno después de 684, otro antes de 2978 y finalmente otro después de 2978. 
+
+Con lo referente a la variable duración tengo uno después de 12. Incluso detectó otros como en el de installment_rate después de 2, y uno en la variable edad antes de 36. En todas estas variables se reflejan cambios de tendencia lo cual ayuda a que el modelo pueda tener un AIC de 961.4, mientras que con el primer modelo sin detectar estas no linealidades teníamos un AIC de 993.81, es decir hay una mejora en el estadístico de 32.41. En este caso mientras más pequeño el AIC mejor se ajustará a los datos y como ya tenemos dos modelos podemos decir que este segundo con el paquete earth ajusta un poco mejor que el primero sin earth. 
+
+## EJERCICIO 5
+
+¿Cuál es la probabilidad estimada media de que el crédito sea malo para mayores de 50 años? 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+library(dbplyr)
+
+# Recuperando valores predichos del modelo con el paquete earth
+german_credit$prob_estimada <- modelo_3$fitted.values
+
+# Extrayendo media de la prediccion
+german_credit %>%
+  dplyr::filter(age > 50) %>%
+  summarise(
+    mean(prob_estimada)
+  )
+```
+
+Análisis: la probabilidad estimada de que a una persona mayor de 50 años tenga un crédito malo es de 27.53%, por ende la probabilidad de que tenga un crédito bueno es de 72.47%. 
+
+
+## EJERCICIO 6
+
+¿Crees que hay discriminación de género en este último modelo creado?
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+library(caret)
+
+# Prediciendo la probabilidad utilizando el modelo del paquete earth
+probabilidad=predict(modelo_3,type="response")
+
+# Extrayendo el vector de Verdaderos y Falsos
+Respuestas_estimadas=ifelse(probabilidad>0.5,"0","1")
+
+# Creando la matriz de confusion
+table(Respuestas_estimadas, german_credit$response, german_credit$sex)
+
+table(german_credit$sex_dicotomico)
+```
+
+Análisis: antes de comenzar el análisis es importante aclarar: el valor 0 corresponde a mujeres y el 1 corresponde a hombres, dicho lo anterior, como podemos observar por cada uno de los géneros presentes en el conjunto de datos sí hay discriminación, ya que el modelo no es capaz de de detectar bien cada una de las categorías. Algo importante de aclarar en este punto, es que no es que hayan diversos géneros, solo hay 2 (a nivel de dataset) lo que cambia es que por ejemplo el factor A91 corresponde a hombres divorciados o separados, el A92 a mujeres divorciadas o separadas, el A93 a hombres solteros y el A94 a hombres casados o comprometidos. 
+
+Se puede observar como el modelo no es capaz de predecir en forma correcta el género de las mujeres, ya que a nivel masculino tampoco es capaz pero no son tantos los Falsos Negativos que retorna cada matriz de confusión (si se compara con los Falsos Positivos de las mujeres). 
+
+La matriz de confusión ideal sería la que la trasa contiene todos los valores, mientras que el lugar que corresponde a los FN y FP están vacíos (es decir 0), sin embargo en nuestro modelo no sucede eso. Esto representa un modelo con predicciones muy pobres y en las cuales hay mucha probabilidad de que se equivoque utilzando la variable género. Por último como se mencionó en la primera pregunta de la presente tarea, tenemos clases desbalancedas, ya que la cantidad de observaciones en el dataset que son mujeres es de 310 y la cantidad asociada a hombres es de 690 (más del doble) entonces es esperable que el modelo tienda a clasificar observaciones de mujeres como que si correspondieran a hombres. Algo que se puede hacer para mejorar estas predicciones es tratar de balancear el dataset con algún método como el SMOTE. 
+
+## EJERCICIO 7
+
+Propón un modelo Ridge para modelizar el fenómeno crediticio. ¿Cuál es el lambda que minimiza el error? Compara este modelo con el logit que teníamos, anteriormente, con la curva ROC.
+
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+library(glmnet)
+
+# Creando modelo ridge
+modelo_4 = model.matrix(response ~ ., data = german_credit)[, -1]
+
+# Asignado parametros a nuevo modelo
+Ridge <- cv.glmnet(x = modelo_4, y = german_credit$response , 
+                   alpha = 0, family = binomial(link = "logit"), 
+                   nfolds = 100)
+
+# Graficando resultado
+plot(Ridge)
+
+# Prediciendo con modelo ridge
+pred = predict(Ridge, s = Ridge$lambda.min, newx = modelo_4, type="response")
+
+mean(pred)
+
+# Calculando la curva roc
+auc_ridge = roc(as.numeric(german_credit$response), as.numeric(pred))$auc
+
+# Imprimiendo resultados
+print(auc_ridge)
+```
+
+Análisis: para calcular el lambda vamos a utilizar una validación cruzada, ya que de forma iterativa podemos encontrar el lambda que miniza el error. Como se puede ver mediante el gráfico, el lambda que miniza el error es el mínimo, así que se utiliza en la definición de la predicción.
+
+Por último se compara ambos resultados mediante el AUC (Curva ROC) usando el primer modelo (sin el paquete earth) y este segundo con el Ridge. En realidad los resultados son muy parecidos, por un lado en el primer modelo con el logit tenemos un AUC de 83.38 mientras que en el que acabamos de construir utilizando el Ridge el resultado es de 83.29, ambos resultados son similares y en realidad en ambos modelos hay un nivel de ajuste descente (cuidado), ya que entre más cercano a 1 mejor será el ajuste del modelo, es decir nuestro modelo tendrá más capacidad de predecir de forma correcta cuando un crédito será  bueno o malo, sin embargo como hemos visto a lo largo de la presente tarea, fiarse solo por un número que nos dé el AUC no es lo mejor, ya que hay que calcular la sensibilidad y la especificidad para ver cómo se comporta nuestro modelo con cada factor que queramos predecir y en este caso, hemos visto que nuestro modelo es deficiente. Esto en la práctica sucede mucho, obtenemos un AUC alto por un desbalanceo en alguna clase y solemos pensar que nuestro modelo está bien construido cuando la realidad es otra. 
+
+Por último, para este caso utilizar un método de regularización como el Ridge introduciendo el parámetro lambda en la regresión no mejoró los resultados, ya que no se logró reducir la varianza, finalmente podemos observar como la media de la probabilidad es de solo un 30%. 
+

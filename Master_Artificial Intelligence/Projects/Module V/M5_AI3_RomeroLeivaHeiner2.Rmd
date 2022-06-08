@@ -1,0 +1,342 @@
+---
+title: 'MÓDULO 5: Técnicas Avanzadas de Predicción'
+author: "Heiner Romero Leiva"
+date: "15/05/2022"
+output:
+  pdf_document:
+subtitle: 'MODELOS LINEALES GENERALIZADOS'
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path="www/")
+library(knitr)
+library(pander)
+library(kableExtra)
+library(stringr)
+library(rgeos)
+library(data.table)
+library(osmdata)
+library(maptools)
+library(leaflet)
+library(sp)
+library(dplyr)
+library(geosphere)
+library(pander)
+library(ggcorrplot)
+library(ggplot2)
+library(lmtest) 
+library(fBasics) 
+library(MASS)
+library(earth)
+library(fitdistrplus)
+library(mfx)
+library(pROC)
+library(glmnet)
+library(spdep)
+library(spgwr)
+library(astsa)
+library(forecast)
+library(car)
+library(pls)
+library(MPV) 
+library(tidyverse)
+library(osmdata)
+library(sf)
+library(ggmap)
+library(spatialreg)
+suppressPackageStartupMessages(library(tidyverse))
+panderOptions('table.split.table', Inf)
+panderOptions('decimal.mark', ",")
+panderOptions('big.mark', ".")
+panderOptions('missing', "")
+options(knitr.kable.NA = '')
+```
+
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+#Pinta a Nivel Punto una base de datos y Variable COlor y Tama?o
+pl_pt<-function(df,size2,color2,dd=5,sz=500){
+  
+  volterars=0
+  volterarc=0
+  
+  if (!is.numeric(size2)) {  df$size<-as.numeric(as.factor(size2)) }
+  if (!is.numeric(color2)) { df$color<-as.numeric(as.factor(color2))}
+  if (is.numeric(size2)) {  df$size<-(size2) }
+  if (is.numeric(color2)) { df$color<-(color2)}
+  x<-dd 
+  dd<-seq(0,1,1/dd)
+  
+  if (volterars==1){      df$size<-(max(df$size)+1-df$size)    }
+  if (volterarc==1){      df$color<-(max(df$color)+1-df$color)    } 
+  
+  
+  if (length(unique(df$color))<10){    pal <- colorBin(palette = "RdYlBu", domain = df$color ,bins = length(levels(as.factor(df$color))) , na.color = "grey40", reverse = T) }
+  if (length(unique(df$color))>=10){   pal <- colorBin(palette = "RdYlBu", domain = df$color ,bins = unique(quantile(df$color, dd )), na.color = "grey40", reverse = T) }
+  
+  a<-as.character(cut(as.numeric(as.factor(df$size)),breaks=x))
+  a<-as.numeric(as.factor(a))
+  
+  
+   pintar<-leaflet() %>%
+    addTiles() %>%
+    addLegend(pal = pal, values = round(df$color, 1), position = "bottomright", title = "") %>%
+    addCircles(data=df,lng =df$longitude ,lat =df$latitude , stroke = FALSE, opacity = 0.5,fillOpacity = 0.5,
+               color =pal(df$color),radius=a*sz)
+  
+  return(pintar)
+  
+}
+
+```
+
+
+# EJERCICIO 1
+
+¿Existe dependencia espacial en la variable precio? ¿Qué tipo de dependencia espacial existe: local, global o ambas? 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Cargando datos
+datos <- read.csv("https://raw.githubusercontent.com/levraines/Portfolio/master/Master_Artificial%20Intelligence/Data/table_5.05.csv")
+
+# Inspeccionando datos
+head(datos)
+
+# Extrayendo 2000 filas
+df <- datos[1:2000, ]
+df$registro <- 1
+df$room_type <- NULL 
+
+# Validando que solo se importen las primeras 2000 filas
+str(df)
+
+# Creando asignacion con KNN
+
+nb <- knn2nb(knearneigh(cbind(df$longitude, df$latitude), k = 10))
+moran.test(df$price, listw = nb2listw(nb, style = "W"))
+moran.plot(df$price, listw = nb2listw(nb, style = "W"), main = "Grafico de l- Moran")
+
+# Viendo si hay dependencia espacial local
+imoranlocal<-as.data.frame(localmoran(x = df$price, listw = nb2listw(nb, style="W")))
+                     
+pl_pt(df,color2 = imoranlocal$Z.Ii,size2 = df$registro,dd = 6)  
+
+
+```
+
+Análisis: vemos que el I-Moran es altamente significativo y que sí existe dependencia espacial de la variable precio, ya que el p-value obtenido es $p < 0.05$. Lo que nos está sacando el I-Moran es que los residuos están interconectados: En este caso la distribución espacial de los valores altos y los valores bajos en el dataset está más agrupada espacialmente de lo que se esperaría si los procesos espaciales subyacentes fueran aleatorios, es decir, los residuos altos o positivos. 
+
+Para esta variable contamos con autocorrelación espacial positiva y además, existe dependencia espacial global. Esto último además se puede comprobar con el gráfico propuesto ya que se ve que hay agrupaciones fuertes de datos hacia el sur, pero también hacia el norte, este y oeste. Aunque en algunos casos no son puntos completamente rojos, sí se ven que son naranja aproximándose al color rojo, esto lo que quiere decir es que los precios de los pisos en los Airbnbs de nuestra base de datos están influenciadas por los precios de sus alrededores tanto positiva como negativamente.
+
+## EJERCICIO 2
+
+Establece un modelo lineal para estimar la variable precio por m2. ¿Hay dependencia espacial en los residuos del modelo? 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+formula <- as.formula('price ~ latitude + number_of_reviews +
+                    calculated_host_listings_count +  reviews_per_month +
+                    accommodates + availability_60 + instant_bookable +
+                    Distancia_Norte + logprice + phone_ports + Piso +
+                    longitude + minimum_nights + review_scores_value +
+                    bedrooms + beds + availability_30 + availability_90 +
+                    Distancia_Centro + Distancia_Sur + tv_ports + Vecinos +
+                    ventanas')
+
+# Creando modelo lineal
+modelo_1 <- glm(formula = formula, data = df, family = gaussian)
+
+# Viendo resultados del modelo
+summary(modelo_1)
+
+# Creando acercamiento con vecinos
+nb <- knn2nb(knearneigh(cbind(df$longitude, df$latitude), k = 10))
+
+# Creando test
+moran.test(x = modelo_1$residuals, listw = nb2listw(nb, style = "W"))
+
+# Ploteando resultado
+moran.plot(x = modelo_1$residuals, listw = nb2listw(nb, style = "W"), main = "Grafico de l- Moran")
+
+```   
+
+Análisis: sí existe dependencia espacial en los residuos del modelo, ya que el p-value obtenido es $p < 0.05$, entonces podemos rechazar la hipótesis nula. En este caso la distribución espacial de los valores altos y los valores bajos en el dataset está más agrupada espacialmente de lo que se esperaría si los procesos espaciales subyacentes fueran aleatorios (muy parecido a lo que obtuvimos en la pregunta 1). Para esta variable contamos con autocorrelación positiva. 
+
+## EJERCICIO 3.
+
+Introduce una variable más en el modelo. Dicha variable es la distancia mínima entre cada persona y la geolocalización de las oficinas bancarias de Madrid obtenidas con OSM. ¿Sigue habiendo dependencia espacial en los residuos del nuevo modelo? 
+
+```{r, warning=FALSE}
+# Importando base de datos con coordenadas
+location <- read.csv("https://raw.githubusercontent.com/levraines/Portfolio/master/Master_Artificial%20Intelligence/Data/Agencias33.csv", header = TRUE, sep = ";", dec = ",")
+
+# Calculando las distancias
+Distancias<-distm(
+  cbind(df$longitude,df$latitude),
+  cbind(location$LONG_IND,location$LAT_IND),fun = distCosine)/1000
+
+# Creando nueva variable con distancias
+df$Dist_Min_piso<-round(apply(Distancias,1,min),1)
+
+# Creando nueva asignacion
+formula_1 <- as.formula('price ~ latitude + number_of_reviews +
+                    calculated_host_listings_count +  reviews_per_month +
+                    accommodates + availability_60 + instant_bookable +
+                    Distancia_Norte + logprice + phone_ports + Piso +
+                    longitude + minimum_nights + review_scores_value +
+                    bedrooms + beds + availability_30 + availability_90 +
+                    Distancia_Centro + Distancia_Sur + tv_ports + Vecinos +
+                    ventanas + Dist_Min_piso')
+
+# Creando modelo lineal
+modelo_2 <- glm(formula = formula_1, data = df, family = gaussian)
+
+# Viendo resultados del modelo
+summary(modelo_2)
+
+# Creando acercamiento con vecinos
+nb <- knn2nb(knearneigh(cbind(df$longitude, df$latitude), k = 10))
+
+# Creando test
+moran.test(x = modelo_2$residuals, listw = nb2listw(nb, style = "W"))
+
+# Ploteando resultado
+moran.plot(x = modelo_1$residuals, listw = nb2listw(nb, style = "W"), main = "Grafico de l- Moran")
+
+```
+
+Análisis: sí sigue habiendo dependencia espacial en los residuos del modelo con la insersión de la nueva variable, ya que el p-value obtenido es $p < 0.05$, entonces en este caso la distribución espacial de los valores altos y los valores bajos en el dataset está más agrupada espacialmente de lo que se esperaría si los procesos espaciales subyacentes fueran aleatorios,
+
+## EJERCICIO 4.
+
+Modeliza el precio con un SAR. ¿Es significativo el factor de dependencia espacial? Interpreta el modelo.  
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+nb <- knn2nb(knearneigh(cbind(df$longitude, df$latitude), k = 10))
+
+formula_2 <- as.formula('price ~ latitude + number_of_reviews + calculated_host_listings_count +  reviews_per_month + accommodates + availability_60 + instant_bookable + Distancia_Norte + logprice + phone_ports + Piso + longitude + minimum_nights + review_scores_value + bedrooms + beds + availability_30 + availability_90 + Distancia_Centro + Distancia_Sur + tv_ports + Vecinos + ventanas + Dist_Min_piso')
+
+modelo_espacial_sar <- lagsarlm (formula = formula_2, data= df, listw = nb2listw(nb, style="W")) 
+
+summary(modelo_espacial_sar)
+
+paste("residuos modelo GLMEspacial",sum((modelo_espacial_sar$residuals)**2))
+
+moran.test(x = modelo_espacial_sar$residuals, listw = nb2listw(nb, style="W"))
+
+```
+
+Análisis: en este caso podemos observar como muchos de los p valores de las variables en el modelo no son significativos, y en aquellos casos que lo son, son en pocas variables como: logprice, longitude, minimum_nights, review_scores_value, bedrooms, bed, Distancia_Centro y Distancia_Sur con las otras variables al parecer no son significativas para el modelo. Por otro lado se obtiene un AIC de 20276 (en este caso entre más cercano a 0 mejor), además podemos ver que la autocorrelación entre los residuos del modelo es bastante significativa y la varianza residual del modelo es de 1436.3 y sus residuos corresponden a 2872625.02. 
+
+Por último según el l-moran test, podemos ver como sí hay dependencia espacial entre las variables, ya que el p-value obtenido es $p < 0.05$. Es decir, la variable dependiente está autocorrelacionada, espacialmente hablando. Esto quiere decir que el valor que toma una determinada variable está influenciado por el valor que toman sus vecinos (en este caso el precio de un Airbnb es modificado completamente por el de sus vecinos). 
+
+
+
+## EJERCICIO 5
+
+Modeliza el precio con un SEM. ¿Es significativo el factor de dependencia espacial? Interpreta el modelo. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+nb <- knn2nb(knearneigh(cbind(df$longitude, df$latitude), k = 10))
+
+formula_2 <- as.formula('price ~ latitude + number_of_reviews + calculated_host_listings_count +  reviews_per_month + accommodates + availability_60 + instant_bookable + Distancia_Norte + logprice + phone_ports + Piso + longitude + minimum_nights + review_scores_value + bedrooms + beds + availability_30 + availability_90 + Distancia_Centro + Distancia_Sur + tv_ports + Vecinos + ventanas + Dist_Min_piso')
+
+modelo_espacial_sem <- errorsarlm(formula = formula_2,data=df, listw = nb2listw(nb, style="W")) 
+
+summary(modelo_espacial_sem)
+
+paste("residuos modelo GLMEspacial SEM",sum((modelo_espacial_sem$residuals)**2))
+
+#Dependencia espacial del SEM
+moran.test(x = modelo_espacial_sem$residuals, listw = nb2listw(nb, style="W"))
+
+```
+
+Análisis: en este caso podemos observar como muchos de los p valores de las variables en el modelo ahora son más significativos que en el modelo SAR, por ejemplo ahora las siguientes variables son significativas: reviews_per_month, accommodates, instant_bookablet, logprice, minimum_nights, review_scores_value, bedrooms, beds, Distancia_Centro y Distancia_Sur. Por otro lado se obtiene un AIC de 20258 (en este caso entre más cercano a 0 mejor y levemente más bajo que con el modelo SAR), además además podemos ver que la varianza residual del modelo es de 1436.3 y sus residuos corresponden a 2807066.14 (un poco más bajos que los del modelo SAR). 
+
+Por último según el l-moran test curiosamente podemos ver como no hay dependencia espacial entre las variables, ya que el p-value obtenido es $p > 0.05$. Es decir, la variable dependiente (precio) toma valores aleatorios dependiendo el lugar donde se busque el Airbnb. Parece que el SEM es el que mejores resultados otorga en cuanto a la dependencia espacial de los residuos. 
+
+
+## EJERCICIO 6
+
+Valora la capacidad predictiva del modelo SAR con la técnica de validación cruzada.
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+formulalog3 = as.formula("logprice ~ minimum_nights+number_of_reviews+review_scores_value+calculated_host_listings_count+bedrooms+reviews_per_month+beds+accommodates+availability_30+availability_60+availability_90+Distancia_Centro+Distancia_Norte+Distancia_Sur+tv_ports+phone_ports+Vecinos+Piso+ventanas")
+
+division<-4
+veces<-10
+medias<-c(0)
+
+for (x in 1:veces){
+df$cluster<-sample(x = c(1:division),size = nrow(df),replace = T)
+rsq<-c(0)
+
+for (i in 1:division){
+df_train<-df[df$cluster!=i,]
+nb_train <- knn2nb(knearneigh(cbind(df_train$longitude, df_train$latitude), k=5))
+df_test<-df[df$cluster==i,]
+nb_test <- nb2mat(knn2nb(knearneigh(cbind(df_test$longitude, df_test$latitude), k=5)))
+
+#SAR con subconjunto training
+modelo_espacial_sar<-suppressMessages(lagsarlm(formula = formulalog3,data=df_train,listw = nb2listw(nb_train, style="W")))
+
+#Prediccion con subconjunto test
+X<-dplyr::select(df_test,minimum_nights,number_of_reviews,review_scores_value,calculated_host_listings_count,bedrooms,reviews_per_month,beds,accommodates,availability_30,availability_60,availability_90,Distancia_Centro,Distancia_Norte,Distancia_Sur,tv_ports,phone_ports,Vecinos,Piso,ventanas)
+Intercept<-rep(1,nrow(X))
+X<-cbind(Intercept,X)
+
+fitt<-solve(as.matrix(diag(nrow(X))-(as.numeric(modelo_espacial_sar$rho)*nb_test)))
+fitt2<-as.matrix(X) %*% as.matrix(modelo_espacial_sar$coefficients)
+fit_final<-fitt %*% fitt2
+
+#Residuos
+resid<-df_test$logprice-as.numeric(fit_final)
+resid_puros<-as.numeric(as.matrix(solve(fitt)) %*% as.matrix(resid))
+
+#R^2
+rss <- sum(resid_puros ^ 2) #Suma de cuadrados residuos
+tss <- sum((df_test$logprice - mean(df_test$logprice)) ^ 2) #Suma de cuadrados total
+rsq[i] <- 1 - rss/tss
+}
+medias[x]<-mean(rsq)
+}
+
+quantile(medias)
+
+```
+
+Análisis: 
+
+
+## EJERCICIO 7
+
+Propón un modelo GWR para estimar los residuos con un cierto suavizado.
+
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+#Convierto mi base de datos en base de datos espacial
+df$residuos<-modelo_espacial_sem$residuals
+puntos_sp<-df
+coordinates(puntos_sp)<- c("longitude","latitude")
+proj4string(puntos_sp) <- CRS("+proj=longlat +datum=WGS84")
+
+#Obtenemos el mejor BW
+bw <- gwr.sel(residuos~1, data=puntos_sp)
+
+paste("El mejor ancho de banda es:",bw)
+
+#Modelizamos
+g <- gwr(residuos~1, data=puntos_sp, bandwidth=bw)
+
+df$intercept<-g$SDF$`(Intercept)`
+
+pl_pt(df,color2 = df$intercept,size2 =df$registro ,dd = 6) 
+
+```
+
+Análisis: con este modelo el ancho espacial óptimo se ha establecido en 29.40, y viendo el gráfico podemos observar que hay una heterocedasticidad espacial importante, esto lo que quiere decir es que el precio de los Airbnb es un factor clave, pero lo que estamos observando es que el cambio en el precio no afecta de la misma forma en diferentes lugares, ya que al sur de nuestro mapa vemos que afecta de mayor forma y en el norte de forma más leve. Viendo detenidamente el mapa podemos observar que al sur se encuentra el Parque del Retiro, Palacio de Cristal, hay varios Museos, está la Puerta de España, hay varios restaurantes y demás, es decir, es una zona muy turística y por supuesto que los precios van a ser mayores, mientras que para el norte también hay lugares turísticos pero más enfocados en tiendas y por supuesto el Estadio Santiago Bernabéu. 
+
+

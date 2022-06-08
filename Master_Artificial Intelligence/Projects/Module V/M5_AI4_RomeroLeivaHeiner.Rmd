@@ -1,0 +1,343 @@
+---
+title: 'MÓDULO 5: Técnicas Avanzadas de Predicción'
+author: "Heiner Romero Leiva"
+date: "15/05/2022"
+output:
+  html_document:
+subtitle: 'MODELO LINEAL GAUSSIANO - MEJOR ESPECIFICACIÓN DEL MODELO'
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path="www/")
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+library(pastecs)
+library(knitr)
+library(caret)
+library(glmnet)
+library(moments) 
+library(cowplot)
+library(SciViews)
+library(MuMIn)
+library(kableExtra)
+library(pastecs)
+library(knitr)
+library(moments)
+library(ggplot2)
+library(lmtest)
+library(reshape2)
+library(scatterplot3d)
+library(spatialreg)
+library(spdep)
+library(MuMIn)
+library(broom)
+library(pander)
+library(MASS)
+library(lmtest)
+library(readxl)
+library(reshape2)
+library(leaflet)
+library(mfx)
+library(pROC)
+library(glmnet)
+library(spdep)
+library(spgwr)
+library(astsa)
+library(forecast)
+library(car)
+library(pls)
+library(MPV) 
+library(sf)
+library(ggmap)
+library(spatialreg)
+suppressPackageStartupMessages(library(tidyverse))
+panderOptions('table.split.table', Inf)
+panderOptions('decimal.mark', ",")
+panderOptions('big.mark', ".")
+panderOptions('missing', "")
+options(knitr.kable.NA = '')
+```
+
+
+
+# EJERCICIO 1
+
+Proponed una especificación que a vuestra intuición sea un buen modelo para explicar la variable y en base a las x que tenemos anteriormente. 
+
+Si se toma en cuenta que la base de datos contiene información sobre el gasto de combustible, y la variable respuesta que buscamos es $y$ (millas/galon), se procede a crear el modelo tomando en cuenta las siguientes variables:  
+
+* $X_1:$Displacement,
+* $X_2:$ Horsepower,
+* $X_3:$ Torque,
+* $X_5:$ Rear axle ratio,
+* $X_8:$ Overall length, 
+* $X_{10}:$ Weight,
+* $X_{11}:$ Type of transmission,
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Cargando datos
+df <- table.b3[-c(23, 25), ]
+
+# Creando modelo con variables seleccionadas
+formula <- as.formula('y ~ x1 + x2 + x3 + x5 + x8 + x10 + x11')
+
+# Creando modelo lineal
+modelo_1 <- lm(formula = formula, data = df, na.action = "na.fail")
+
+# Viendo resultados del modelo
+summary(modelo_1)
+
+```
+
+Análisis: con base en el modelo anterior podemos ver que tiene un buen coeficiente de determinación, ya que es de 81.58%, pero si nos ponemos a ver solo una variable es significativa y es la $X_{10}:$, es decir: $Weight$. En cuanto al error residual estándar es de 3.089 (entre menos mejor).
+
+Para comprobar si elegí las variables correctas, realizamos otro modelo usando todas las variables:
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+# Creando modelo con variables seleccionadas
+formula_1 <- as.formula('y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x11')
+
+# Creando modelo lineal
+modelo_2 <- lm(formula = formula_1, data = df, na.action = "na.fail")
+
+# Viendo resultados del modelo
+summary(modelo_2)
+
+```
+
+Análisis: se puede observar como si ingresamos todas las posibles variables al modelo se obtiene un coeficiente de determinación de 83.55% (levemente por encima del que se obtuvo previamente) y un error estándar levemente más alto de igual forma.
+
+Por otro lado, si vemos los p valores, podemos ver que ninguno es significativo, es decir, pasamos de tener el $X_{10}:$ como significativo usando solo unas variables a usarlas todas y ahora no serlo. 
+
+En cuanto a cuál modelo es mejor, yo diría que aunque el segundo arroja casi 2% más en cuanto al R2 del primero, el primero tiene menos variables y es más fácil de, por ende yo me quedaría con el primero aparte que tiene una variable significativa que puede explicarme que cuánto pese un auto me va a condicionar el gasto de combustible que yo realice, ya que es algo lógico, entre más pesado un vehículo será más el gasto de gasolina para mover el automotor. 
+
+
+## EJERCICIO 2
+
+Utilizar la técnica STEPWISE para elegir el modelo de tal forma que minimicemos el BIC. 
+
+Para este apartado se van a crear dos modelos de referencia, uno llamado empty model y full model. Luego, usamos la función step donde especificamos que $k=\log(n)$, de esta manera el valor de $AIC$, en realidad tendrá el valor del $BIC$, ya que por defecto el criterio que entrega la función setp es el AIC, entonces bajo esta premisa se tiene lo siguiente: 
+
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+# Creamos el modelo vacío
+empty_model = lm(y ~ 1, data = df)
+
+# Creamos el modelo con todad las variables
+full_model = lm(y ~ .,data=df)
+
+
+# Usando stepwise desde el empty model  hasta el full model 
+Stepwise_model <- step(empty_model,
+                     scope = list(lower=empty_model,upper=full_model),
+                     direction = "both",
+                     trace = FALSE,
+                     k= log(nrow(df))
+                     )
+
+# Presentamos el summary del modelo
+pander(summary(Stepwise_model))
+
+```   
+
+Análisis: se puede observar que el modelo seleccionado por el comando $stepwise$ decreció el criterio BIC, ya que este simplemente es explicado por una variable en este caso: $X_1$ y esta variable es significativa para el modelo ya que, $p > 0.05$.
+
+Ahora veamos a ver qué cuál sería el mejor modelo seleccionado pero usando el criterio AIC. 
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+Stepwise_model_2 <- step(empty_model,
+                     scope = list(lower=empty_model,upper=full_model),
+                     direction = "both",
+                     k=2,
+                     trace = FALSE)
+
+pander(summary(Stepwise_model_2))
+```   
+
+Análisis: curiosamente si utilizamos el AIC como parámetro, aquí tenemos un modelo explicado por dos variables, en este caso $X_1$ y $X_4$, aunque si nos centramos en ver la $X_1$, esta es la única variable significativa en el modelo, tal y como comentamos anteriormente. 
+
+
+## EJERCICIO 3.
+
+Programad vuestro propio STEPWISE (Backward o Forward) para decidir cuál sería el mejor modelo minimizando la siguiente función:
+
+En este apartado empecé pensando cómo puedo crear diferentes tipos de combinaciones con las variables explicativas, así que me di a la tarea de buscar cómo se podrían hacer y encontré una función en R ($dredge$), que según su documentación: "Generate a model selection table of models with combinations (subsets) of fixed effect terms in the global model, with optional model inclusion rules." que es justo lo que necesito y además utilicé unas funciones del paquete  $extra$ de la función. 
+
+Para este caso en específico $dredge$ entrega el resultado final de los modelos ordenados por AICs. Además se opta por añadir otros estadísticos como: $R^2$ y adj$R^2$ (para ver el coeficiente de determinación una vez que hay más de una variable). Se añade también el U_Theil y se opta por ordenar los valores por $rank= "BIC"$ para ordenarlo por BIC en lugar de por AIC, tal y como vimos en el ejercicio 2. 
+
+Vamos a ver si se cumple lo que los otros modelos han dicho, es decir, que aquellos modelos con mejor BIC son aquellos con una variable y que tienen un R2 más alto. para ello se utiliza un ejemplo que viene en la propia documentación:
+
+```{r,results = 'asis', warning=FALSE, message= FALSE}
+# Creando modelo
+full.model <- lm( y~. , data=df, na.action = "na.fail")
+
+# Utilizando paquete
+seleccion<- model.sel(dredge(full.model))
+
+# Definiendo delta
+seleccionados <- subset(seleccion, delta <= 2)
+kable(seleccionados, caption ='Mejores modelos') %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+
+# Creamos el data frame con todos los modelos
+T_Modelos <-as.data.frame(model.sel(dredge(full.model,
+                      rank = "BIC",                             
+                      extra = c("R^2", "adjR^2", "U_Theil"=function(x){ 
+                             a<-sqrt(
+                                     (1/nrow(x$model))*sum( (x$model$y-predict(x))**2 )
+                                     )
+                             b<-sqrt(
+                                     (1/nrow(x$model))*sum((x$model$y)**2)
+                                     ) +
+                               sqrt(
+                                    (1/nrow(x$model))*sum((predict(x))**2)
+                                    )
+                             c<-a/b + 0.05*(ncol(x$model)-1) 
+                              c
+                      }) ))) 
+                      
+T_Modelos<- T_Modelos[order(T_Modelos$U_Theil),]
+
+kable(head(T_Modelos,10), caption ='Modelos que minimizan U') %>%
+ kable_classic(full_width = F)
+```
+
+Análisis: como se vio con el stepwise, se escogió un modelo con solo una variable y aquí se ve que se repite el mismo patrón, ya que la U de Theil se minimiza con aquellos que solo incluyen una variable. También podemos observar que el el mejor BIC corresponde al modelo que es explicado por una sola variable, tal y como predijo el Stepwise, en este caso la variable $X_1$. 
+
+Por otro lado, también intenté crear otra programación utilizando $fors$ y la estretegia que utilicé fue ir incluyendo cada variable de forma sumativa, es decir, el primer modelo tenía la variable $X_1$, el segundo $X_1$ y $X_2$ y así sucesivamente hasta llegar a tener las 11 variables. 
+
+```{r, warning=FALSE}
+
+var <- names(df)
+
+for(i in 2:12)
+{
+  #Create table with predictors and Y
+  Temp_df<-df %>% dplyr::select(var[i:12])
+  Temp_df<-cbind(df$y,Temp_df)
+  names(Temp_df)[1]<-"y"
+  
+  #Build model
+  modelo_temp <- glm(y ~ . , data = Temp_df, family = gaussian)
+  
+  #These will save the num and denos
+  numerador<-0
+  primer_denominador<-0
+  segundo_denominador<-0
+
+  #First loop for the numerator
+  for(i in 1:length(Temp_df$y)){
+   numerador<- (as.vector(Temp_df$y[i])-as.vector(modelo_temp$fitted.values[i]))**2
+    numerador<-numerador+numerador
+    
+    #First denominator
+    primer_denominador <- ((1/length(Temp_df$y)*as.vector(Temp_df$y[i])**2)**0.5)
+    primer_denominador<-primer_denominador+primer_denominador
+    
+    segundo_denominador <- ((1/length(Temp_df$y)*as.vector(modelo_temp$fitted.values[i])**2)**0.5) 
+    segundo_denominador <- segundo_denominador + segundo_denominador
+  }
+
+  numerador_final<-((1/length(Temp_df$y))*(numerador))**0.5
+  
+  denominador_final <- primer_denominador + segundo_denominador
+  
+  print(paste0(c("Indice de Theil con --------->: ",length(names(Temp_df))-1, (numerador_final /denominador_final) + 0.05 * ncol(df-1))))
+  
+  print(c("R2 del modelo: ", with(summary(modelo_temp), 1 - deviance/null.deviance)))
+  
+}
+
+```
+
+Análisis: en este caso el índice de Theil no fue tan eficiente cómo el anterior (entre más cercano a 0 mejor) sin embargo hasta cierto punto podemos ver que el modelo 1, que solo incluía la variable $X_1$ es el que tiene un U de 61.79 y un R2 de 52.02%, pero el que incluye todas las variables (el de 11 variables) obtiene un U de 60.37 (el mejor) y un R2 de 83.54% (lo mismo que se obtuvo en la pregunta 1) por lo que podemos afirmar que aunque el paquete que usamos es más eficiente, el programado también arroja resultados descentes en el modelo. 
+
+## EJERCICIO 4.
+
+Probad a variar el 0.05 para elegir un modelo según vuestra visión. 
+
+```{r,results = 'asis', warning=FALSE, message= FALSE}
+# Creamos el data frame con todos los modelos
+T_Modelos <-as.data.frame(model.sel(dredge(full.model,
+                      rank = "BIC",                             
+                      extra = c("R^2", "adjR^2", "U_Theil"=function(x){ 
+                             a<-sqrt(
+                                     (1/nrow(x$model))*sum( (x$model$y-predict(x))**2 )
+                                     )
+                             b<-sqrt(
+                                     (1/nrow(x$model))*sum((x$model$y)**2)
+                                     ) +
+                               sqrt(
+                                    (1/nrow(x$model))*sum((predict(x))**2)
+                                    )
+                             c<-a/b + 0.5*(ncol(x$model)-1) 
+                              c
+                      }) ))) 
+                      
+T_Modelos<- T_Modelos[order(T_Modelos$U_Theil),]
+
+kable(head(T_Modelos,10), caption ='Modelos que minimizan U') %>%
+ kable_classic(full_width = F)
+```
+
+Análisis: si variamos el 0.05 a 0.5, podemos ver que la mejor especificación del modelo se la lleva el que no tiene variable explicativas, ya que es donde se minimiza la U de Theil, ya que obtenemos 0.1502 (entre más cercano a 0 mejor) y conforme vamos aumentando la cantidad de variables explicativas la U the Theil va aumentando. 
+
+Algo curioso es que aunque la mejor especificación del modelo se la lleva el que no tiene variable explicativas, este es el que tiene el BIC más alto, ya que los otros tienen BIC menores a este. 
+
+Veamos a ver cómo se comporta nuestro modelo programado, pero usando un 0.01:
+
+```{r results = 'asis', warning=FALSE, message= FALSE}
+
+var <- names(df)
+
+for(i in 2:12)
+{
+  #Create table with predictors and Y
+  Temp_df<-df %>% dplyr::select(var[i:12])
+  Temp_df<-cbind(df$y,Temp_df)
+  names(Temp_df)[1]<-"y"
+  
+  #Build model
+  modelo_temp <- glm(y ~ . , data = Temp_df, family = gaussian)
+  
+  #These will save the num and denos
+  numerador<-0
+  primer_denominador<-0
+  segundo_denominador<-0
+
+  #First loop for the numerator
+  for(i in 1:length(Temp_df$y)){
+   numerador<- (as.vector(Temp_df$y[i])-as.vector(modelo_temp$fitted.values[i]))**2
+    numerador<-numerador+numerador
+    
+    #First denominator  
+    primer_denominador <- ((1/length(Temp_df$y)*as.vector(Temp_df$y[i])**2)**0.5)
+    primer_denominador<-primer_denominador+primer_denominador
+    
+    segundo_denominador <- ((1/length(Temp_df$y)*as.vector(modelo_temp$fitted.values[i])**2)**0.5) 
+    segundo_denominador <- segundo_denominador + segundo_denominador
+  }
+
+  numerador_final<-((1/length(Temp_df$y))*(numerador))**0.5
+  
+  denominador_final <- primer_denominador + segundo_denominador
+  
+  print(paste0(c("Indice de Theil con --------->: ",length(names(Temp_df))-1, (numerador_final /denominador_final) + 0.01 * ncol(df-1))))
+  
+  print(c("R2 del modelo: ", with(summary(modelo_temp), 1 - deviance/null.deviance)))
+  
+}
+
+```
+
+Análisis: podemos ver que según nuestro modelo programado la mejor especificación que minimiza nuestra U es el modelo que tiene todas las variables y de segundo el que solo tiene una única variable. Al parecer la variable $X_1$ es bastante importante para nuestro modelo (y para el resto). 
+
+
+## EJERCICIO 5
+
+En función de los modelos anteriores, ¿cuál de ellos en el caso de que difieran recomendaríais?
+
+Análisis: como se ha venido trabajando con diferentes constantes: $0.05$, $0.5$ y $0.01$, en caso de que difieran yo recomendaría utilizar el que tiene la constante de $0.05$ tal y como se indicó que trabajaramos, ya que si nos ponemos a ver es prácticamente el mismo modelo que nos recomienda la biblioteca stepwise, ya que es el que tiene el mejor R2 ($76.06$), es el que tiene el mejor BIC ($161.62$) y es el que minimiza la U de Theil ($12.22$). Además contamos con: intercepto significativo, la variable $X_1$ es significativa ya que $p<0.05$. 
